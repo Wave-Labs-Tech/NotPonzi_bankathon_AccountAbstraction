@@ -7,24 +7,31 @@
   border-radius: 10px;
   max-width: 500px;
   margin: auto;
+  margin-top: 20px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3); /* Sombra para darle profundidad */
+  position: relative;
 }
 
-label {
+.form label {
   font-weight: bold;
-  margin-bottom: 8px;
+  margin-bottom: 1px;
   display: block;
   color: #ffffff;
+  margin-top: 10px;
 }
-
-input[type="number"],
-input[type="text"],
-textarea {
+.inputs-container label {
+  margin-top: 20px;
+}
+.form input[type="number"],
+.form input[type="text"],
+.form textarea {
   width: calc(
     100% - 20px
   ); /* Ajusta el ancho para que el input esté bien alineado con el formulario */
-  padding: 10px;
+  padding: 20px;
+  margin: auto;
   margin-bottom: 15px;
+  margin-top: 5px;
   border: 1px solid #b3d335; /* Borde verde brillante */
   border-radius: 5px;
   background-color: #1b3b6f; /* Fondo azul oscuro para inputs */
@@ -32,15 +39,15 @@ textarea {
   font-size: 16px;
 }
 
-input[type="radio"] {
+.form input[type="radio"] {
   margin-right: 10px;
 }
 
-textarea {
+.form textarea {
   resize: none; /* Desactivar el redimensionamiento del textarea */
 }
 
-button[type="submit"] {
+.form button[type="submit"] {
   background-color: #e2f212; /* Fondo de botón amarillo claro */
   color: #0c2d59; /* Texto en azul oscuro */
   border: none;
@@ -54,11 +61,31 @@ button[type="submit"] {
   text-transform: uppercase;
 }
 
-button[type="submit"]:hover {
+.form button[type="submit"]:hover {
   background-color: #d1e510; /* Efecto hover para el botón */
 }
 
-button[type="submit"]:focus {
+.form button[type="submit"]:focus {
   outline: none;
   box-shadow: 0px 0px 5px #b3d335; /* Resaltar botón en focus */
+}
+
+.form-close-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  border: none;
+  /* background: transparent; */
+  background-color: #d1e510;
+  font-size: 30px;
+  cursor: pointer;
+
+  padding: 5px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  /* font-size: 16px; */
+  color: #0c2d59;
+  /* color: #ffffff; */
+}
+.form-close-button-container {
 }
