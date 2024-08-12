@@ -8,12 +8,13 @@ import { useEffect, useState } from "react";
 // import {useAccount, useBalance, useWaitForTransactionReceipt, useWriteContract, useReadContract } from "wagmi";
 
 // import { readContract, writeContract, waitForTransactionReceipt, waitForTransaction} from "wagmi/actions";
-import styles from "../styles/Home.module.css";
-import ModalResumen from './components/modalResumen'; 
-import FormularioAnuncio from './components/formularioAnuncio'
+// import styles from "../styles/Home.module.css";
+import ModalResumen from './components/ModalResumen'; 
+import FormularioOferta from './components/FormularioOferta'
+import OfferCard from "./components/OfferCard";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { uiConsole } from './utils/SignMessageFunction';
+import { uiConsole, convertToBigNumber, convertFromBigNumber } from './utils/Utils';
 
 
 
@@ -21,11 +22,12 @@ import Web3 from "web3";
 import { Web3Auth } from "@web3auth/modal";
 import { EthereumPrivateKeyProvider } from "@web3auth/ethereum-provider";
 import { CHAIN_NAMESPACES, IProvider, UserInfo, WEB3AUTH_NETWORK } from "@web3auth/base";
-import { Contract, ethers, hashMessage, JsonRpcProvider, Wallet } from 'ethers';
+import { Contract, ethers, formatEther, hashMessage, JsonRpcProvider, Wallet } from 'ethers';
 
 import { addItemToLocalStorage, initializeExistingPrefixes, findItemsByInitialNumbers }from './utils/StorageFuntions';
 // import truncateEthAddress from 'truncate-eth-address';
 import "./App.css";
+import styles from './App.module.css';
 
 // import { waitForTransactionReceipt } from 'wagmi/actions';
 // import { config } from './main';
@@ -33,13 +35,31 @@ import "./App.css";
 
 import { CommonPrivateKeyProvider } from "@web3auth/base-provider";
 import 'react-toastify/dist/ReactToastify.css';
+import { Toast } from "react-toastify/dist/components";
+
+
+// console.log("ABI CONTRACT", TowerbankABI);
+console.log("ADDRESS CONTRACT", CONTRACT_ADDRESS);
+// console.log("ABI TokenClass", USDTABI);
+console.log("ADDRESS Token", USDTAddress);
+//BORRAR AL RESCUPERAR WEB3AUTH
+//BORRAR AL RESCUPERAR WEB3AUTH
+//BORRAR AL RESCUPERAR WEB3AUTH
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+//BORRAR AL RESCUPERAR WEB3AUTH
+//BORRAR AL RESCUPERAR WEB3AUTH
+//BORRAR AL RESCUPERAR WEB3AUTH
 
 const clientId = process.env.REACT_APP_CLIENT_ID; // get from https://dashboard.web3auth.io
 
 // const verifier = "w3a-firebase-demo";
 // IMP END - Dashboard Registration
 // const chainConfig = {
-//   chainId: "0x66eee", // Please use 0x1 for Mainnet
+  //   chainId: "0x66eee", // Please use 0x1 for Mainnet
 //   rpcTarget: process.env.REACT_APP_ARBITRUM_SEPOLIA_RPC_URL || "",
 //   chainNamespace: CHAIN_NAMESPACES.EIP155,
 //   displayName: "Arbitrum Sepolia",
@@ -94,7 +114,8 @@ export default function Home() {
   const [stableAddress, setStableAddress] = useState('');
   const [approveValue, setApproveValue] = useState(0);
   const [seller, setSeller] = useState("");
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState<number>(0);
+  const [price, setPrice] = useState<number>(0);
   // const [releaseNum, setReleaseNum] = useState(0);
   const [refundNumber, setRefundNumber] = useState(0);
   const [refundNumberNativeC, setRefundNumberNativeC] = useState(0);
@@ -102,7 +123,7 @@ export default function Home() {
   const [releaseNumberNativeC, setReleaseNumberNativeC] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [datosModal, setDatosModal] = useState({
-    crypto: "usdt" || "eth",
+    crypto: "usdt",
     amount: 0,
     price: 0,
     maximo: 0,
@@ -113,82 +134,94 @@ export default function Home() {
     // location: "",
     conditions: ""
   });
-  const [balanceOf, setBalanceOf] = useState("");
-  const [provider, setProvider] = useState<IProvider | null>(null);
+  const [balanceOf, setBalanceOf] = useState(0);
+  const [allowance, setAllowance] = useState(0);
+  const [orderId, setOrderId] = useState(0);
+  // const [provider, setProvider] = useState<IProvider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
 
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
   const [user, setUser] = useState<Partial<UserInfo> | null>(null);
   const [address, setAddress] = useState<string>("");
   const [contract, setContract] = useState<Contract | null>(null);
+  const [tokenContract, setTokenContract] = useState<Contract | null>(null);
+  const [lastEscrow, setLastEscrow] = useState<any | null>(null);
+  const [owner, setOwner] = useState('');
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [nativeOffers, setNativeOffers] = useState<any[]>([]);
+  const [usdtOffers, setUsdtOffers] = useState<any[]>([]);
+  // const [balance, setBalance] = useState<number>(0);
   // const [feeBuyer, setFeeBuyer] = useState<number>(0);
   
-  useEffect(() => {
-    const init = async () => {
-      try {
+
+
+
+  // useEffect(() => {
+  //   const init = async () => {
+  //     try {
         // IMP START - SDK Initialization
         // Verificar si el web3auth ya está conectado
-        if (!web3auth.connected && !web3auth.provider) {
-          await web3auth.initModal();
-          setProvider(web3auth.provider);
-        }
-        // Verificar si provider está inicializado
-        if (web3auth.provider) {
-          setProvider(web3auth.provider);
-          const user: Partial<UserInfo> = await web3auth.getUserInfo();
-          // console.log("USER", user);
-          setUser(user);
 
-          const w3aProvider: ethers.BrowserProvider = new ethers.BrowserProvider(
-            web3auth.provider
-          );
-          // console.log("w3aProvider", w3aProvider);
+       //-------->>>>>>///DESCOMENTAR PARA USAR WEB2 AUTH///<<<<<-----------
 
-          const w3aSigner: ethers.JsonRpcSigner = await w3aProvider.getSigner();
-          setSigner(w3aSigner);
-          // console.log("w3aSigner", w3aSigner);
+        // if (!web3auth.connected && !web3auth.provider) {
+        //   await web3auth.initModal();
+        //   setProvider(web3auth.provider);
+        // }
+        // // Verificar si provider está inicializado
+        // if (web3auth.provider) {
+        //   setProvider(web3auth.provider);
+        //   const user: Partial<UserInfo> = await web3auth.getUserInfo();
+        //   // console.log("USER", user);
+        //   setUser(user);
 
-          const web3 = new Web3(web3auth.provider as any);
+        //   const w3aProvider: ethers.BrowserProvider = new ethers.BrowserProvider(
+        //     web3auth.provider
+        //   );
+        //   // console.log("w3aProvider", w3aProvider);
 
-          let initAddress: any = await web3.eth.getAccounts();
-          initAddress = initAddress[0];
+        //   const w3aSigner: ethers.JsonRpcSigner = await w3aProvider.getSigner();
+        //   setSigner(w3aSigner);
+        //   // console.log("w3aSigner", w3aSigner);
 
-          // console.log("initAddress", initAddress);
-          setAddress(initAddress);
+        //   const web3 = new Web3(web3auth.provider as any);
 
-          if (web3auth.connected) {
-            setLoggedIn(true);
-          }
+        //   let initAddress: any = await web3.eth.getAccounts();
+        //   initAddress = initAddress[0];
 
-          const provider: JsonRpcProvider = new JsonRpcProvider(
-            process.env.REACT_APP_SEPOLIA_RPC_URL
-          );
+        //   // console.log("initAddress", initAddress);
+        //   setAddress(initAddress);
 
-          const signer: ethers.Wallet = new Wallet(
-            process.env.REACT_APP_WALLET_PRIVATE_KEY || "",
-            provider
-          );
+        //   if (web3auth.connected) {
+        //     setLoggedIn(true);
+        //   }
+
+          // const provider: JsonRpcProvider = new JsonRpcProvider(
+          //   process.env.REACT_APP_SEPOLIA_RPC_URL
+          // );
+
+          // const signer: ethers.Wallet = new Wallet(
+          //   process.env.REACT_APP_WALLET_PRIVATE_KEY || "",
+          //   provider
+          // );
           
+          // const initAddress = await signer.getAddress(); //BBORRAR AL DESCOMENTAR WRB3AUTH
+
+          // const initContract = new Contract(CONTRACT_ADDRESS, TowerbankABI, signer);
+          // setContract(initContract);
+          // const tokContract = new Contract(USDTAddress, USDTABI, signer);
+          // setTokenContract(tokContract);
           
-          
-          const initContract = new Contract(CONTRACT_ADDRESS, TowerbankABI, signer);
-          setContract(initContract);
-          // console.log("Contract", initContract);
+          // // setBalance(formatUnits(tokContract.balanceOf(initAddress), 18));
+          // setBalanceOf(await tokContract.balanceOf(initAddress));
 
-          // if (productId > 0 || provenanceData) {
-          //   console.log("PRUEBA");
-          //   fetchProductData();
-          //   console.log("product", productData);
-          //   fetchProvenanceData();
-          //   console.log("PROVENANCE", provenanceData);
-          // }
-
-          // console.log("Provider", web3auth.provider);
-          setIsLoading(false);
-        } else {
-          throw new Error("Provider not initialized");
-        }
-
+          // console.log("PRUEBA");
+          // console.log("BalanceOf", await tokContract.balanceOf(initAddress).toString());
+          // setIsLoading(false);
+        // } else {
+        //   throw new Error("Provider not initialized");
+        // }
+      
         // setEth(
         //   web3.utils.fromWei(
         //     await web3.eth.getBalance(initAddress as string), // Balance is in wei
@@ -204,23 +237,155 @@ export default function Home() {
         //     "0xD96B642Ca70edB30e58248689CEaFc6E36785d68"
         //   )
         // );
+    //   } catch (error) {
+    //     console.error(error);
+    //   }
+    // };
 
+  //   init();
+  // // }, [productId]);
+  // }, []);
+
+
+//BORRAR ESTE Y DESCOMENTAR EL OTRO
+//BORRAR ESTE Y DESCOMENTAR EL OTRO
+const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
+//BORRAR ESTE Y DESCOMENTAR EL OTRO
+//BORRAR ESTE Y DESCOMENTAR EL OTRO
+
+  //-------->>>>>COMENTAR ESTA FUNCION Y DESCOMENTAR LA ANTERIOR PARA PERMITIR WEB3AUTH<<<<<<--------
+
+  // useEffect(() => {
+  //   const fetchLastEscrow = async () => {
+  //     if (!contract) {
+  //       console.error("Contract is not initialized");
+  //       return;
+  //     }
+  //     try {
+  //       const _orderId = await contract?.orderId();
+  //       const result: any = await contract?.getEscrow(parseInt(_orderId.toString()) - 1); // Cambiado a getEscrow
+  //       if (result) {
+  //         setLastEscrow(result);
+  //         console.log("Seller:", result.seller);
+  //         console.log("Value:", result.value);
+  //         console.log("Cost:", result.cost);
+  //       } else {
+  //         console.error("No se encontraron datos para la oferta con ID:", _orderId.toString());
+  //       }
+  //     } catch (error) {
+  //       console.error("Error al obtener datos de la oferta:", error);
+  //     }
+  //   };
+  
+  //   // Solo ejecutar fetchLastEscrow cuando el contrato esté inicializado
+  //   if (contract) {
+  //     fetchLastEscrow();
+  //   }
+  // }, [contract]); // El hook se ejecutará solo cuando contract cambie
+  useEffect(() => {
+    const fetchOffers = async () => {
+      if (!contract) return; // Verifica que el contrato esté disponible
+  
+      setIsLoading(true);
+      try {
+        const orderId = await contract.orderId();
+        const fetchedNativeOffers: any[] = [];
+        const fetchedUsdtOffers: any[] = [];
+  
+        for (let i = 0; i < orderId; i++) {
+          const escrow = await contract.getEscrow(i);
+          if (escrow.status !== 'Completed') {
+            // Crear un objeto que incluya el id
+            const offer = {
+              id: i, // Asocia el id del índice al escrow
+              ...escrow,
+            };
+          if (escrow.status !== 'Completed') {
+            if (escrow.escrowNative) {
+              fetchedNativeOffers.push(offer);
+            } else {
+              fetchedUsdtOffers.push(offer);
+            }
+          }
+          }
+        }
+        console.log("OFFERS EN USE_EFEFCT", fetchedNativeOffers);
+        console.log("OFFERS EN USE_EFEFCT", fetchedUsdtOffers);
+        setNativeOffers(fetchedNativeOffers);
+        setUsdtOffers(fetchedUsdtOffers);
       } catch (error) {
-        console.error(error);
+        console.error("Error al obtener ofertas:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
-
-    init();
-  // }, [productId]);
-  }, []);
-
-  const login = async () => {
-    // IMP START - Login
-    const web3authProvider = await web3auth.connect();
-    // IMP END - Login
-    setProvider(web3authProvider);
+  
+    fetchOffers();
+  }, [contract, orderId]);
 
 
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      try {
+        // Solicitar al usuario que conecte su billetera
+        const provider = new ethers.BrowserProvider(window.ethereum);
+
+        // Solicitar al usuario que conecte una cuenta
+        const accounts = await provider.send("eth_requestAccounts", []);
+        const signer = await provider.getSigner();
+        
+        const userAddress = await signer.getAddress();
+        setAddress(userAddress);
+        setProvider(provider);
+        setSigner(signer);
+        userAddress? setLoggedIn(true): setLoggedIn(false);
+
+        console.log("Provider:", provider);
+        console.log("Signer:", signer);
+        console.log("Connected Address:", userAddress);
+        console.log("ISLOGGED?", loggedIn);
+        if (provider && signer) {
+          // Initialize Towerbank contract
+          const towerbankContract = new Contract(CONTRACT_ADDRESS, TowerbankABI, signer);
+          if (!towerbankContract) {
+            console.error("Towerbank contract initialization failed");
+          } else {
+            console.log("Towerbank Contract initialized:", towerbankContract);
+          }
+          setContract(towerbankContract);
+          console.log("Contract:", towerbankContract);
+          
+          // Initialize USDT contract
+          const usdtContract = new Contract(USDTAddress, USDTABI, signer);
+          if (!usdtContract) {
+            console.error("USDT contract initialization failed");
+          } else {
+            console.log("USDT Contract initialized:", usdtContract);
+          }
+          setTokenContract(usdtContract);
+          console.log("TOKENContract:", usdtContract);
+        } else {
+          console.error("Provider or Signer not initialized");
+        }
+      } catch (err) {
+        console.error("User rejected the connection:", err);
+      }
+    } else {
+      console.error("No Ethereum provider found. Install MetaMask or another wallet.");
+    }
+  };
+
+
+//DESCOMENTAR setProvider DESPUES DE RECUPERAR WEB3AUTH
+//DESCOMENTAR setProvider DESPUES DE RECUPERAR WEB3AUTH
+//DESCOMENTAR setProvider DESPUES DE RECUPERAR WEB3AUTH
+const login = async () => {
+  // IMP START - Login
+  const web3authProvider = await web3auth.connect();
+  // IMP END - Login
+  // setProvider(web3authProvider);
+  
+  
     if (web3auth.connected) {
       setLoggedIn(true);
     }
@@ -232,76 +397,12 @@ export default function Home() {
     setLoggedIn(false);
     uiConsole("logged out");
   };
-
-   async function _createEscrow (
-    provider: any,
-    contract: any,
-    address: string,
-    name: string,
-    pass: string,
-    participantType: string,
-    participantAddress: string,
-    setIsParticipantModalOpen: React.Dispatch<React.SetStateAction<boolean>>,
-    setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-    setParticipantData: React.Dispatch<React.SetStateAction<any[] | undefined>>,
-    setName: React.Dispatch<React.SetStateAction<string>>,
-    setPass: React.Dispatch<React.SetStateAction<string>>,
-    setParticipantType: React.Dispatch<React.SetStateAction<string>>,
-    setParticipantAddress: React.Dispatch<React.SetStateAction<string>>,
-  ) => {
-          try {
-            setIsLoading(true);
-            const message = "Hola, TraZableDLT pagará el gas por ti";
-            const hash = hashMessage(message);
-            // console.log("HASH", hash);
-            const signature = await signMessage(message, provider);
-            // console.log("SIGNATURE", signature);
-      
-            if (!contract) {
-              throw new Error("Contract not found");
-            }
-      
-            const addParticipantID = await contract.participant_id(); // Asegúrate de que este método existe y devuelve el último productId
-            const addParticipantTx = await contract.addParticipant(address, hash, signature, name, pass, participantType, participantAddress, {
-              gasLimit: 5000000,
-            });
-            await addParticipantTx.wait();
-      
-            if(addParticipantTx){
+  //DESCOMENTAR setProvider DESPUES DE RECUPERAR WEB3AUTH
+  //DESCOMENTAR setProvider DESPUES DE RECUPERAR WEB3AUTH
+  //DESCOMENTAR setProvider DESPUES DE RECUPERAR WEB3AUTH
   
-                let participant = new Participant(
-                    name,
-                    participantType,
-                    participantAddress,
-                    addParticipantID.toString()
-                  )
-                  
-                  addItemToLocalStorage(participant, "participant");
-                  // console.log("participantId.toString():", participantId.toString());
-                  // console.log("PARTICIPANT:", participant);
-                  // console.log("addParticipantID - 1:", (parseInt(addParticipantID) - 1).toString());
-                  setParticipantData(await contract.getParticipant(addParticipantID));
-                  // setParticipantData(participant);
-              }
-                  
-                  toast("Participant added successfully");
-                  setIsParticipantModalOpen(true);
-              } catch (error) {
-                  console.error(error);
-                  toast.error('Error while adding participant. Try again.')
-          } finally {
-            setIsLoading(false);
-          }
-          // console.log("ParticipantAddress", participantAddress);
-          // console.log("Adress", address);
-          setName('');
-          setPass('');
-          setParticipantAddress('');
-          setParticipantType('');
-          setIsLoading(true)
-        };
   
-   async function createEscrow() {
+   async function createEscrow(value: number, price: number) {
     // console.log("VALOR value el CREAR Escrow: ", ethers.parseEther(value.toString()));
     // console.log("Address SELLER al CREAR el Escrow: ", seller);
     setIsLoading(true);
@@ -317,7 +418,18 @@ export default function Home() {
       // const addParticipantID = await contract.participant_id(); // Asegúrate de que este método existe y devuelve el último productId
       // const addEscrowTokenTx = await contract.addParticipant(address, hash, signature, value, cost, USDTAddress) {
       // const addEscrowTokenTx = await contract.addParticipant( value, cost, USDTAddress {
-      const addEscrowTokenTx = await contract.createEscrowToken( value, value, USDTAddress, {
+      console.log("value", value);
+      console.log("price", price);
+      const valueUsdtBig = convertToBigNumber(value, 6);
+      console.log("valueUsdtBig", valueUsdtBig);
+      const priceEthBig = convertToBigNumber(price, 18);
+      console.log("priceEthBig", priceEthBig);
+      const cost = valueUsdtBig * priceEthBig;
+      console.log("cost", cost);
+      const totalCost = convertFromBigNumber(cost, 18);
+      console.log("totalCost", totalCost);
+
+      const addEscrowTokenTx = await contract.createEscrowToken(valueUsdtBig, totalCost, USDTAddress, {
           gasLimit: 5000000,
         });
       await addEscrowTokenTx.wait();
@@ -329,43 +441,15 @@ export default function Home() {
       console.error(error);
       // window.alert(error);
       toast.error("No se ha podido crear la oferta USDT");
+    }finally{
+      setIsLoading(false);
     }
-   setIsLoading(false);
   } 
 
 
-    /// ================== Devolver Escrow   ==================
-    // async function refundEscrow() {
-    //  setIsLoading(true);
-    //   try {
-    //     const tx = await writeContract({
-    //       address: CONTRACT_ADDRESS,
-    //       abi: TowerbankABI,
-    //       functionName: 'refundBuyer',
-    //       args: [refundNumber],      
-    //   });
-    
-    //     // Espera a que la transacción se confirme
-    //     const receipt = await waitForTransaction(tx);
-    //     window.alert("Se ha devuelto el Escrow")
-    //     console.log('Transacción confirmada:', receipt);
-    //   } catch (error) {
-    //     console.error('Error en la devolución del escrow:', error);
-    //     window.alert(error);
-    //   }
-    //   setIsLoading(false);
-    // }
-
     
 
-    // let _amountFeeSeller = ((_value *
-    //         (400 * 10 ** 6)) /
-    //         (100 * 10 ** 6)) / 1000;
-/// ================== Create Escrow Native Coin ==================
-  //  const seller = '0xC7873b6EE9D6EF0ac02d5d1Cef98ABEea01E29e2';
-  //  const value = 100000000;
-    // Function  to create  Escrows
-    async function createEscrowNativeCoin() {
+    async function createEscrowNativeCoin(value: number, price: number) {
       setIsLoading(true);
       // const message = "Hola, Towerbank pagará el gas por ti";
       // const hash = hashMessage(message);
@@ -378,114 +462,144 @@ export default function Home() {
       try {
         // const addParticipantID = await contract.participant_id(); // Asegúrate de que este método existe y devuelve el último productId
         // const addEscrowTokenTx = await contract.addParticipant(address, hash, signature, value, cost, USDTAddress) {
-        // const addEscrowTokenTx = await contract.addParticipant( value, cost, USDTAddress {
-        const addEscrowNativeTx = await contract.createEscrowNativeCoin(value, value, USDTAddress, {
+          // const addEscrowTokenTx = await contract.addParticipant( value, cost, USDTAddress {
+            
+          console.log("value", value);
+          console.log("price", price);
+          const valueEthBig = convertToBigNumber(value, 18);
+          console.log("valueEthBig", valueEthBig);
+          const priceUsdtBig = convertToBigNumber(price, 6);
+          console.log("priceUsdtBig", priceUsdtBig);
+          const cost = valueEthBig * valueEthBig;
+          console.log("cost", cost);
+          const totalCost = convertFromBigNumber(cost, 6);
+          console.log("totalCost", totalCost);
+          
+          // let amountFeeSeller = ((valueEthBig * (await getFeeSeller() * 10 ** 18)) /
+          const amountFeeSeller = ((valueEthBig * (await getFeeSeller() * 10 ** 18)) /
+          // (100 * 10 ** 6)) / 1000; DECIMALES, 6 USDT
+          (100 * 10 ** 18)) / 1000;
+          console.log("amountFeeSeller", amountFeeSeller);
+          const totalValue = valueEthBig + amountFeeSeller;
+          console.log("totalValue", totalValue);
+          const addEscrowNativeTx = await contract.createEscrowNativeCoin(valueEthBig, totalCost, USDTAddress, {
             gasLimit: 5000000,
+            value: {totalValue}
           });
         await addEscrowNativeTx.wait();
         // const receipt = await waitForTransaction(addEscrowTokenTx);
+        window.alert("Se ha creado el Escrow")
         toast("Se ha creado la oferta ETH exitosamente");
+        // await waitForTransaction(tx);
+        console.log("Hash", addEscrowNativeTx.hash);
+        console.log('Transacción confirmada:', addEscrowNativeTx);
         
         console.log('Transacción confirmada:', addEscrowNativeTx.hash);
       } catch (error) {
         console.error(error);
         // window.alert(error);
         toast.error("No se ha podido crear la oferta ETH");
+      }finally{
+        setIsLoading(false);
       }
-     setIsLoading(false);
     } 
-      // console.log("FEE y VALUE: ", (parseInt(fee) + 33) *2, value);
+    async function acceptEscrowToken(_orderId: number, cost: number) {
       setIsLoading(true);
-      // let amountFeeBuyer = ((value * (feeBuyer * 10 ** 6)) DECIMALES, 6 USDT
-      let amountFeeBuyer = ((parseFloat(value) * (fee * 10 ** 18)) /
-            // (100 * 10 ** 6)) / 1000; DECIMALES, 6 USDT
-            (100 * 10 ** 18)) / 1000;
+      // const message = "Hola, Towerbank pagará el gas por ti";
+      // const hash = hashMessage(message);
+      // console.log("HASH", hash);
+      // const signature = await signMessage(message, provider);
+      // console.log("SIGNATURE", signature);
+      if (!contract) {
+        throw new Error("Contract not found");
+      }
       try {
-        const tx = await writeContract({
-        // const tx = await useContractWrite({
-          address: CONTRACT_ADDRESS,
-          abi: TowerbankABI,
-          functionName: "createEscrowNativeCoin",
-          // args: [0, seller, BigInt(value), USDTAddress],
-          args: [seller, ethers.parseEther(value.toString())],
-          value: ethers.parseEther((value + amountFeeBuyer).toString()),
-        });
-        await waitForTransaction(tx);
-        window.alert("Se ha creado el Escrow")
-        console.log("Hash", tx.hash);
-        console.log('Transacción confirmada:', tx);
+        // const addParticipantID = await contract.participant_id(); // Asegúrate de que este método existe y devuelve el último productId
+        // const addEscrowTokenTx = await contract.addParticipant(address, hash, signature, value, cost, USDTAddress) {
+          // const addEscrowTokenTx = await contract.addParticipant( value, cost, USDTAddress {
+          
+          console.log("cost", cost);
+          console.log("ORDERID", parseInt(_orderId.toString()) );
+          // const costEthBig = convertToBigNumber(cost, 18);
+          // console.log("costETHBIG", costEthBig);
+          // let amountFeeSeller = ((valueEthBig * (await getFeeSeller() * 10 ** 18)) /
+          // let feebuyer = parseInt(await getFeeBuyer().toString());
+          // const amountFeeBuyer = ((cost * (feebuyer * 10 ** 18)) /
+          // // (100 * 10 ** 6)) / 1000; DECIMALES, 6 USDT
+          // (100 * 10 ** 18)) / 1000;
+          // console.log("amountFeeBuyer", amountFeeBuyer);
+          // const totalCost = cost + amountFeeBuyer;
+          // console.log("totalCost", totalCost);  
+
+        const acceptEscrowTokenTx = await contract.acceptEscrowToken( parseInt(_orderId.toString()), {
+            gasLimit: 5000000,
+            value: cost
+          });
+        await acceptEscrowTokenTx.wait();
+        // const receipt = await waitForTransaction(addEscrowTokenTx);
+        window.alert("Se ha aceptado la oferta USDT. Se han trasferido los fondos")
+        toast("Se ha aceptado la oferta USDT. Se han trasferido los fondos");
+        // await waitForTransaction(tx);
+        console.log("Hash", acceptEscrowTokenTx.hash);
+        console.log('Transacción ACCEPT confirmada:', acceptEscrowTokenTx);
+        
+        console.log('Transacción ACCEPT confirmada:', acceptEscrowTokenTx.hash);
       } catch (error) {
         console.error(error);
-        window.alert(error);
+        // window.alert(error);
+        toast.error("No se ha podido aceptar la oferta USDT");
+      }finally{
+        setIsLoading(false);
       }
-     setIsLoading(false);
     } 
+    async function acceptEscrowNativeCoin(_orderId: number) {
+      setIsLoading(true);
+      // const message = "Hola, Towerbank pagará el gas por ti";
+      // const hash = hashMessage(message);
+      // console.log("HASH", hash);
+      // const signature = await signMessage(message, provider);
+      // console.log("SIGNATURE", signature);
+      if (!contract) {
+        throw new Error("Contract not found");
+      }
+      try {
+        // const addParticipantID = await contract.participant_id(); // Asegúrate de que este método existe y devuelve el último productId
+        // const addEscrowTokenTx = await contract.addParticipant(address, hash, signature, value, cost, USDTAddress) {
+          // const addEscrowTokenTx = await contract.addParticipant( value, cost, USDTAddress {
+          
+        const acceptEscrowNativeTx = await contract.acceptEscrowNativeCoin( _orderId, {
+            gasLimit: 5000000
+          });
+        await acceptEscrowNativeTx.wait();
+        // const receipt = await waitForTransaction(addEscrowTokenTx);
+        window.alert("Se ha aceptado la oferta ETH. Se han trasferido los fondos")
+        toast("Se ha aceptado la oferta ETH. Se han trasferido los fondos");
+        // await waitForTransaction(tx);
+        console.log("Hash", acceptEscrowNativeTx.hash);
+        console.log('Transacción ACCEPT confirmada:', acceptEscrowNativeTx);
+        
+        console.log('Transacción ACCEPT confirmada:', acceptEscrowNativeTx.hash);
+      } catch (error) {
+        console.error(error);
+        // window.alert(error);
+        toast.error("No se ha podido acptar la oferta ETH");
+      }finally{
+        setIsLoading(false);
+      }
+    } 
+  
 
-    
-        // /// ================== Devolver Escrow Native Coin  ==================
-        // async function refundEscrowNativeCoin() {
-        //  setIsLoading(true);
-        //   try {
-        //     const tx = await writeContract({
-        //       address: CONTRACT_ADDRESS,
-        //       abi: TowerbankABI,
-        //       functionName: 'refundBuyerNativeCoin',
-        //       args: [refundNumberNativeC],      
-        //   });
-        
-        //     // Espera a que la transacción se confirme
-        //     await waitForTransaction(tx);
-        //     window.alert(`Se ha devuelto el Escrow con este hash: ${tx.hash}`);
-        //     console.log('Devolución confirmada:', tx.hash);
-        //   } catch (error) {
-        //     console.error('Error en la devolución del escrow:', error);
-        //     window.alert(error);
-        //   }
-        //  setIsLoading(false);
-        // }
-        /// ================== Withdraw fees ==================
-        
-        
-        // async function withdrawFees() {
-        //  setIsLoading(true);
-        //   try {
-        //     const tx = await writeContract({
-        //       address: CONTRACT_ADDRESS,
-        //       abi: TowerbankABI,
-        //       functionName: 'withdrawFees',
-        //       args: [USDTAddress], //Recoge las Fees guardadas correpondientes a USDT 
-        //   });
-        
-        //     // Espera a que la transacción se confirme
-        //     await waitForTransaction(tx);
-        //     window.alert(`Se ha devuelto el Escrow con este hash: ${tx.hash}`);
-        //     console.log('Devolución confirmada:', tx.hash);
-        //   } catch (error) {
-        //     console.error('Error en la devolución del escrow:', error);
-        //     window.alert(error);
-        //   }
-        //  setIsLoading(false);
-        // }
-        /// ================== Withdraw fees Native Coin ==================
-        // async function withdrawFeesNativeCoin() {
-        //  setIsLoading(true);
-        //   try {
-        //     const tx = await writeContract({
-        //       address: CONTRACT_ADDRESS,
-        //       abi: TowerbankABI,
-        //       functionName: 'withdrawFeesNativeCoin',    
-        //   });
-        
-        //     // Espera a que la transacción se confirme
-        //     await waitForTransaction(tx);
-        //     window.alert(`Se ha devuelto el Escrow con este hash: ${tx.hash}`);
-        //     console.log('Devolución confirmada:', tx.hash);
-        //   } catch (error) {
-        //     console.error('Error en la devolución del escrow:', error);
-        //     window.alert(error);
-        //   }
-        //  setIsLoading(false);
-        // }
+    /// ================== Fee Seller ==================
+    async function getFeeSeller() {
+      try {
+        const feeSeller= await contract?.feeSeller();
+        console.log("feeSeller",feeSeller); // Imprime la versión obtenida del contrato
+        return feeSeller;
+      } catch (error) {
+        console.error("Error al obtener la feeSeller:", error);
+      }
+    }
+    let sellerfee = parseFloat(getFeeSeller().toString());
     /// ================== Fee Buyer ==================
     async function getFeeBuyer() {
       try {
@@ -496,67 +610,56 @@ export default function Home() {
         console.error("Error al obtener la feeBuyer:", error);
       }
     }
-    let fee = parseFloat(getFeeBuyer().toString());
     
-// setVersion(versionTowerbank.data);
-// console.log("FEE BUYER: ", parseInt(fee));
-// console.log("FeeBuyer:", parseInt(feeBuyer.data));
+
 
     /// ================== Version Towerbank ==================
     async function getVersion() {
       try {
         const version = await contract?.version();
-        console.log("version",version); // Imprime la versión obtenida del contrato
+        console.log("XXversion",version); // Imprime la versión obtenida del contrato
+        return version;
       } catch (error) {
         console.error("Error al obtener la versión:", error);
       }
     }
-    console.log("version",getVersion()); // Imprime la versión obtenida del contrato
     
-// setVersion(versionTowerbank.data);
-// console.log("Version:", versionTowerbank.data);
+    const version = getVersion();
 
 
   /// ================== Añadir Stable Coin ==================
-  //  async function addStableAddress(stableAddress: string) {
-  //  setIsLoading(true);
-  //   try {
-  //     const tx = await writeContract({
-  //       address: CONTRACT_ADDRESS,
-  //       abi: TowerbankABI,
-  //       functionName: "addStablesAddresses",
-  //       args: [USDTAddress],
-  //     });
+  async function addStableAddress(stableAddress: string) {
+    // console.log("VALOR value el CREAR Escrow: ", ethers.parseEther(value.toString()));
+    // console.log("Address SELLER al CREAR el Escrow: ", seller);
+    setIsLoading(true);
+    // const message = "Hola, Towerbank pagará el gas por ti";
+    // const hash = hashMessage(message);
+    // console.log("HASH", hash);
+    // const signature = await signMessage(message, provider);
+    // console.log("SIGNATURE", signature);
+    if (!contract) {
+      throw new Error("Contract not found");
+    }
+    try {
+      // const addParticipantID = await contract.participant_id(); // Asegúrate de que este método existe y devuelve el último productId
+      // const addEscrowTokenTx = await contract.addParticipant(address, hash, signature, value, cost, USDTAddress) {
+      // const addEscrowTokenTx = await contract.addParticipant( value, cost, USDTAddress {
+      const addStableAddressTx = await contract.addStablesAddresses( stableAddress, {
+          gasLimit: 5000000,
+        });
+      await addStableAddressTx.wait();
+      // const receipt = await waitForTransaction(addEscrowTokenTx);
+      toast("Se ha añadido la crypto currency exitosamente");
+      
+      console.log('Transacción addStable confirmada:', addStableAddressTx.hash);
+    } catch (error) {
+      console.error(error);
+      // window.alert(error);
+      toast.error("No se ha podido añadir la crypto currency");
+    }
+   setIsLoading(false);
+  }
 
-  //     await waitForTransaction(tx);
-  //     window.alert("Se ha añadido correctamente a la lista de addresses")
-
-  //   } catch (error) {
-  //     console.error(error);
-  //     window.alert(error);
-  //   }
-  //  setIsLoading(false);
-  // } 
- 
-  
- 
-  // Fetch the balance of the DAO
-  // const daoBalance = useBalance({
-  //   address: CryptoDevsDAOAddress,
-  // });
-
-/// ================== User Balance ==================
-  // const userBalance = useReadContract({
-  //   abi: USDTABI,
-  //   address: USDTAddress,
-  //   functionName: "balanceOf",
-  //   args: [address]
-  // });
- 
-// // console.log("UserBalance: ", userBalance.data);
-// if (userBalance.data != null){
-//   // console.log("UserBalance: ", ethers.formatEther(userBalance.data));
-// }
 
 /// ================== Escrow  Value  ==================
 async function getEscrowValue(escrowId: number) {
@@ -584,45 +687,84 @@ async function getEscrowValue(escrowId: number) {
   // console.log("EscrowState",escrowState);
 
   /// ================== Get OrderID  ==================
-  // Fetch the state of Escrow
   async function getOrderId() {
     try {
-      const orderId= await contract?.orderId();
-      console.log("orderId", orderId); 
-      return orderId;
+        const orderId = await contract?.orderId();
+        console.log("orderId", orderId); 
+        setOrderId(orderId);
+        return orderId;
     } catch (error) {
-      console.error("Error al obtener el numero de oferta:", error);
+        console.error("Error al obtener el numero de oferta:", error);
     }
-  }
-  let newEscrow= parseInt(getOrderId().toString());
-  // orderId?console.log("ORDERID", orderId) && console.log("ORDERID", parseInt(orderId.data)): console.log("ORDERID", "NO HAY");
-  // newEscrow? console.log("NewEscrow", newEscrow): console.log("NewEscrow", "NO HAY");
-  
+}
+
+
 
   /// ================== Get scrow 0E  ==================
   // Fetch the state of Escrow
-  async function getLastEscrow(escrowId: number) {
-    try {
-      const lastEscrow = await contract?.getEscrow(newEscrow - 1);
-      console.log("lastEscrow", lastEscrow); 
-      return lastEscrow;
-    } catch (error) {
-      console.error("Error al obtener el escrow:", error);
-    }
-  }
+/// ================== Get Last Escrow ==================
+// Fetch the state of Escrow
+// async function getLastEscrow(escrowId: number) {
+//   try {
+//       const lastEscrow = await contract?.getEscrow(escrowId);
+//       console.log("lastEscrow", lastEscrow); 
+//       setLastEscrow(lastEscrow);
+//       return lastEscrow;
+//   } catch (error) {
+//       console.error("Error al obtener el escrow:", error);
+//   }
+// }
+
+// // Llamada para obtener el último escrow basado en el ID
+
+// const fetchLastEscrow = async () => {
+//   if (!contract) {
+//     console.error("Contract is not initialized");
+//     return;
+//   }
+//   try {
+//     const _orderId = await contract?.orderId();
+//     const result: any = await contract?.getLastEscrow(parseInt(_orderId.toString()) - 1);
+//     // if (result && result.length === 3) {
+//     if (result) {
+//       setLastEscrow(result);
+//       const seller = result.seller;
+//       const type = result.escrowNative;
+//       const value = result.value;
+//       const cost = result.cost;
+//       console.log("Seller:", seller);
+//       console.log("Value:", value);
+//       console.log("Cost:", cost);
+     
+//     } else {
+//       const merda =  getLastEscrow(parseInt(_orderId.toString())  -1);
+//       console.error("No se encontrado datos para la oferta:", orderId);
+//       console.log("MERDA SECA", merda);
+//     }
+//   } catch (error) {
+//     console.error("Error al obtener datos de la oferta", error);
+//   }
+// };
+// console.log("EL maldito ORDERID", orderId);
+// fetchLastEscrow();
+  // console.log("Last Escrow",lastEscrow);
   // if(lastEscrow.data){
   //   // console.log("lastEscrowData",lastEscrow.data.buyer);
   //   // console.log("lastEscrowBuyer",lastEscrow.data.buyer);
   // }
   
   /// ================== Owner del protocolo  ==================
-  // const owner = useReadContract({
-    
-  //   abi: TowerbankABI,
-  //   address: CONTRACT_ADDRESS,
-  //   functionName: "owner",
-  // });
-  // console.log("OWNER",owner.data);
+  
+async function getowner() {
+  try {
+    const owner= await contract?.owner();
+    console.log("owner", owner); 
+    setOwner(owner);
+  } catch (error) {
+    console.error("Error al obtener el owner del contrato:", error);
+  }
+}
+getowner();
 
 /// ================== Allowance en USDT  ==================
 
@@ -631,56 +773,71 @@ async function getAllowance() {
   try {
     const allowance= await contract?.allowance(address, CONTRACT_ADDRESS);
     console.log("allowance", allowance); 
-    return allowance;
+    setAllowance(allowance);
   } catch (error) {
     console.error("Error al obtener el allowance de oferta:", error);
   }
 }
- 
+//  getAllowance()
   // if(allowance && allowance.data){
   //   // console.log("ALLOWANCE: ", formatEther(allowance.data));
 
   // }
 
   /// ================== Approve el user a Towerbank  ==================
+  async function approve() {
+    setIsLoading(true);
+    // const message = "Hola, Towerbank pagará el gas por ti";
+    // const hash = hashMessage(message);
+    // console.log("HASH", hash);
+    // const signature = await signMessage(message, provider);
+    // console.log("SIGNATURE", signature);
+    if (!contract) {
+      throw new Error("Contract not found");
+    }
 
-  // Approve Necesita introducir numero con 6 decimales
-    // async function approve() {
-    //  setIsLoading(true);
-    //   try {
-    //     const tx = await writeContract({
-    //       address: USDTAddress,
-    //       abi: USDTABI,
-    //       functionName: 'approve',
-    //       args: [CONTRACT_ADDRESS, ethers.parseEther(approveValue.toString())],     
-    //   });
-    //     // Espera a que la transacción se confirme
-    //     const receipt = await waitForTransaction(tx);//funciona bien, no lo uso ahora
-    //     await waitForTransaction(tx);
-    //     window.alert("Se ha realizado el approve")
-    //     console.log('Transacción confirmada:', tx.hash);
-    //     // console.log('Receipt :', receipt);
-    //   } catch (error) {
-    //     console.error('Error en el approve:', error);
-    //     window.alert(error);
-    //   }
-    //  setIsLoading(false);
-    // }
-
-
-  const handleChange = (e: any) => {
-    const { name, type, value } = e.target;
+    // const amountFeeSeller = ((valueEthBig * (await getFeeSeller() * 10 ** 18)) /
+    // // (100 * 10 ** 6)) / 1000; DECIMALES, 6 USDT
+    // (100 * 10 ** 18)) / 1000;
   
+    console.log("approveValue", approveValue);
+    const amountApprove = convertToBigNumber(approveValue, 6);
+    console.log("amountApprove ", amountApprove);
+    try {
+      // const addParticipantID = await contract.participant_id(); // Asegúrate de que este método existe y devuelve el último productId
+      // const addEscrowTokenTx = await contract.addParticipant(address, hash, signature, value, cost, USDTAddress) {
+      // const addEscrowTokenTx = await contract.addParticipant( value, cost, USDTAddress {
+      const approveTx = await tokenContract?.approve (CONTRACT_ADDRESS, amountApprove, {
+          gasLimit: 5000000,
+        });
+      await approveTx.wait();
+      // const receipt = await waitForTransaction(addEscrowTokenTx);
+      window.alert("Se ha aprobado con éxito")
+      toast("Se ha aprobado con éxito");
+      // await waitForTransaction(tx);
+      console.log("Hash del approve", approveTx.hash);
+      console.log('Transacción approve confirmada:', approveTx);
+
+    } catch (error) {
+      console.error(error);
+      // window.alert(error);
+      toast.error("No se ha podido aprobar");
+    }
+   setIsLoading(false);
+  } 
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, type, value } = e.target;
+    
     if (type === "radio" && name === "crypto") {
       setDatosModal(prevState => ({
         ...prevState,
-        crypto: value,
-        amount: 0, // Opcional: limpia la cantidad disponible si cambias de cripto
-        price: 0, // Opcional: limpia el precio por unidad si cambias de cripto
-        // payment_mode: "", // Opcional: limpia el modo de pago si cambias de cripto
-        maximo: 0, // Opcional: limpia el modo de pago si cambias de cripto
-        minimo: 0, // Opcional: limpia el modo de pago si cambias de cripto 
-        conditions: "", // Opcional: limpia el modo de pago si cambias de cripto
+        crypto: value as "usdt" | "eth",
+        amount: 0, 
+        price: 0, 
+        maximo: 0,
+        minimo: 0,
+        conditions: ""
       }));
     } else {
       setDatosModal(prevState => ({
@@ -689,309 +846,117 @@ async function getAllowance() {
       }));
     }
   };
+
+  // const handleChange = (e: any) => {
+  //   const { name, type, value } = e.target;
+  
+  //   if (type === "radio" && name === "crypto") {
+  //     setDatosModal(prevState => ({
+  //       ...prevState,
+  //       crypto: value,
+  //       amount: 0, // Opcional: limpia la cantidad disponible si cambias de cripto
+  //       price: 0, // Opcional: limpia el precio por unidad si cambias de cripto
+  //       // payment_mode: "", // Opcional: limpia el modo de pago si cambias de cripto
+  //       maximo: 0, // Opcional: limpia el modo de pago si cambias de cripto
+  //       minimo: 0, // Opcional: limpia el modo de pago si cambias de cripto 
+  //       conditions: "", // Opcional: limpia el modo de pago si cambias de cripto
+  //     }));
+  //   } else {
+  //     setDatosModal(prevState => ({
+  //       ...prevState,
+  //       [name]: value
+  //     }));
+  //   }
+  // };
   
   
   
   const handleSubmitModal = (e: any) => {
     e.preventDefault();
     console.log("DatosModal, linea 541", datosModal);
-    abrirModal(datosModal);
+    // abrirModal(datosModal);
+    openModal(datosModal);
   };
   
-  const abrirModal = (datos: any) => {
-    console.log(datos); // Ahora deberías ver los datos actualizados
-    // setDatosModal(datos);
-    setIsModalOpen(true);
+ 
+  const openForm = () => {
+    setIsFormVisible(true);
   };
 
-  const cerrarModal = () => {
-    setIsModalOpen(false);
-  };
 
-  // {isModalOpen && (
-  //   <ModalResumen
-  //     onCloseModal={() => setIsModalOpen(false)}
-  //     // cripto={datosModal.usdtSeleccionado? "USDT" : "ETH"}
-  //     crypto={datosModal.crypto? "USDT" : "ETH"}
-  //     amount={datosModal.amount}
-  //     price={datosModal.price}
-  //     // payment_mode={datosModal.payment_mode}
-  //   />
-  // )}
-  
-  // // Function to fetch a proposal by it's ID
-  // async function fetchProposalById(id) {
-  //   try {
-  //     const proposal = await readContract({
-  //       address: CryptoDevsDAOAddress,
-  //       abi: CryptoDevsDAOABI,
-  //       functionName: "proposals",
-  //       args: [id],
-  //     });
-
-  //     const [nftTokenId, deadline, yayVotes, nayVotes, executed] = proposal;
-
-  //     const parsedProposal = {
-  //       proposalId: id,
-  //       nftTokenId: nftTokenId.toString(),
-  //       deadline: new Date(parseInt(deadline.toString()) * 1000),
-  //       yayVotes: yayVotes.toString(),
-  //       nayVotes: nayVotes.toString(),
-  //       executed: Boolean(executed),
-  //     };
-
-  //     return parsedProposal;
-  //   } catch (error) {
-  //     console.error(error);
-  //     window.alert(error);
-  //   }
-  // }
-
-  // // Function to fetch all proposals in the DAO
-  // async function fetchAllProposals() {
-  //   try {
-  //     const proposals = [];
-
-  //     for (let i = 0; i < numOfProposalsInDAO.data; i++) {
-  //       const proposal = await fetchProposalById(i);
-  //       proposals.push(proposal);
-  //     }
-
-  //     setProposals(proposals);
-  //     return proposals;
-  //   } catch (error) {
-  //     console.error(error);
-  //     window.alert(error);
-  //   }
-  // }
-
-  
-  
-  const { writeContractAsync } = useWriteContract();
-
-  const crearAnuncio = async (datosModal: any) => {
-    // Asegrarse de que amount y price sean números decimales
-    let amountDecimal = parseFloat(datosModal.amount);
-    let priceDecimal = parseFloat(datosModal.price);
-
-    // Verificar que ambos valores sean válidos
-    if (isNaN(amountDecimal) || isNaN(priceDecimal)) {
-      throw new Error('Amount or price is not a valid number.');
-    }
-    // Calcula el total multiplicando amount por price
-    const totalDecimal = amountDecimal * priceDecimal;  
-
-    // Determinar el factor de decimales basado en la criptomoneda
-    let decimalsFactor = 1; // Valor predeterminado
-    
-   setIsLoading(true);
-    try {
+const handleConfirmModal = async () => {
+  if(datosModal){
     if (datosModal.crypto === 'eth') {
-      decimalsFactor = Math.pow(10, 18); // Factor para ETH
-      const value = Math.round(amountDecimal * decimalsFactor);
-      // Aplicar el factor de decimales al total
-      const cost = Math.round(totalDecimal * decimalsFactor);
-        const txHash = await writeContractAsync({
-          address: CONTRACT_ADDRESS,
-          abi: TowerbankABI,
-          functionName: 'createEscrowNativeCoin',
-          args: [ value, cost, USDTAddress],
-          value: value.toString(), // Enviar Ether directamente      
-        });
-        // Espera a que la transacción se confirme
-        const receipt = await waitForTransactionReceipt({
-          confirmations: 1,
-          hash: txHash,
-        })
-        console.log('Transacción confirmada:', receipt);
-      } else if (datosModal.crypto === 'usdt') {
-        decimalsFactor = Math.pow(10, 6); // Factor para USDT
-        const value = Math.round(amountDecimal * decimalsFactor);
-        // Aplicar el factor de decimales al total
-        const cost = Math.round(totalDecimal * decimalsFactor);
-        const txHash = await writeContractAsync({
-          address: CONTRACT_ADDRESS,
-          abi: TowerbankABI,
-          functionName: 'createEscrowToken',
-          args: [ value, cost, USDTAddress ],      
-        });
-        // Espera a que la transacción se confirme
-        const receipt = await waitForTransactionReceipt({
-          confirmations: 1,
-          hash: txHash,
-        })
-        console.log('Transacción confirmada:', receipt);
-      }
-        
-        window.alert("Se ha creado la oferta")
-        // toast('Participant added successfully')
-      } catch (error) {
-      toast.error('Error while adding participant. Try again.')
-      console.error('Error en la creación de la oferta:', error);
-      window.alert(error);
+      await createEscrowNativeCoin(datosModal.amount, datosModal.price);
+    } else if (datosModal.crypto === 'usdt') {
+      await createEscrow(datosModal.amount, datosModal.price);
     }
-   setIsLoading(false);
-    console.log("Creando oferta con datos:", datosModal);
-    // cerrarModal(); 
-    // Ejemplo: enviar los datos a una API o realizar otra acción
+    console.log("handleConfirmModal MODAL ANTES", isModalOpen);
+    setIsModalOpen(false);
+  }
+};
+
+const handleCancelModal = () => {
+  console.log("handleCancelModal MODAL ANTES", isModalOpen);
+  setIsModalOpen(false); // Cierra el modal sin hacer nada
+};
+
+const openModal = (data: any) => {
+  setDatosModal(data);
+  console.log("openModal MODAL ANTES", isModalOpen);
+  setIsModalOpen(true);
+  console.log("SE DEBE ABRIR EL MODAL");
+};
+
+const closeModal = () => {
+  console.log("closeModal MODAL ANTES", isModalOpen);
+  setIsModalOpen(false);
+  console.log("SE DEBE CERRAR EL MODAL");
+  // setDatosModal(null);
   };
-  // Render the contents of the appropriate tab based on `selectedTab`
-  useEffect(() => {
-  // Verificar si el estado de `isMounted` se está configurando correctamente
-  setIsMounted(true);
-  console.log("Component mounted:", isMounted);
-  setBalanceOf(userBalance?.data);
-}, []);
-  
-  function renderTabs() {
-    if (selectedTab === "Anuncio USDT") {
-      return renderCreateUsdtOffer();
-    // } else if (selectedTab === "Anuncio ETH") {
-    } else if (selectedTab === "Anuncio ETH") {
-      // return renderCreateEthOffer();
-      return renderCreateEthOffer();
-    }
-    return null;
-  }
-
-  // Renders the 'Create Proposal' tab content
-  function renderCreateUsdtOffer(){
-    console.log("Rendering Create USDT Offer");
-    console.log("loading:", isLoading);
-    console.log("address:", address);
-    if (isLoading) {
-      return (
-        <div className={styles.description}>
-          Loading... Waiting for transaction...
-        </div>
-      );
-    } else if (!address) {
-
-      return (
-        <div className={styles.description}>
-          No estas conectado,  <br />
-          <b>por favor conéctate</b>
-        </div>
-      );
-    } else {
-        return (
-            <><FormularioAnuncio
-            datosModal={datosModal}
-            handleSubmitModal = {handleSubmitModal}
-            // crearAnuncio={crearAnuncio} 
-            handleChange={handleChange}
-            />
-            <div className={styles.description}>
-            <form onSubmit={handleSubmitModal}>
-              <div className={styles.container}>
-                <input type="radio" id="usdt" name="crypto" value="usdt" checked={datosModal.crypto === "usdt"}  onChange={handleChange}></input>
-                <label htmlFor="usdt">USDT</label><br></br>
-                {/*         <input type="radio" id="eth" name="crypto" value="eth" checked={datosModal.eth} onChange={handleChange}></input> */}
-                <input type="radio" id="eth" name="crypto" value="eth" checked={datosModal.crypto === "eth"}  onChange={handleChange}></input>
-                {/*         <label for="eth">ETH</label> */}
-                <label htmlFor="eth">ETH</label>
-              </div>
-              
-
-              
-              {/* <button className={styles.button2} onClick={renderCreateUsdtOffer}>
-       Create
-      </button>  */}
-              <button type="submit">Crear Oferta USDT</button>
-              {/* necesario agregar esto al final de la funcion que crea la Oferta
-   console.log("Creando oferta con:", formularioDatos);
- cerrarModal();  */}
-            </form>
-            {/* <FormularioAnuncio handleSubmitModal = {handleSubmitModal}/> */}
-            <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000 }}>
-              {isModalOpen && (
-                <ModalResumen
-                  onCloseModal={() => setIsModalOpen(false)}
-                  datosModal={datosModal}
-                  crearAnuncio={crearAnuncio} />
-              )}
-            </div>
-          </div></>
-      );
-    }
-  }
-
-  // Renders the 'View Proposals' tab content
-  // function renderCreateEthOffer() {
-  function renderCreateEthOffer() {
-    if (isLoading) {
-      return (
-        <div className={styles.description}>
-          Loading... Esperando por la transacción...
-        </div>
-      );
-    } else if (proposals.length === 0) {
-      return (
-        <div className={styles.description}>No se han generados</div>
-      );
-    } else {
-      return (
-        <div>
-          {/* {proposals.map((p, index) => (
-            <div key={index} className={styles.card}>
-              <p>Deadline: {p.deadline.toLocaleString()}</p>
-          
-              <p>Executed?: {p.executed.toString()}</p>
-              {p.deadline.getTime() > Date.now() && !p.executed ? (
-                <div className={styles.flex}>
-                  
-                
-                </div>
-              ) : p.deadline.getTime() < Date.now() && !p.executed ? (
-                <div className={styles.flex}>
-                 
-                  
-                </div>
-              ) : (
-                <div className={styles.description}>Anuncio terminado</div>
-              )}
-            </div>
-          ))} */}
-        </div>
-      );
-    }
-  }
-
-  
 
 
 
-  // Piece of code that runs everytime the value of `selectedTab` changes
-  // Used to re-fetch all proposals in the DAO when user switches
-  // to the 'View Proposals' tab
-  useEffect(() => {
-    if (selectedTab === "View Proposals") {
-      // fetchAllProposals();
-    }
-  }, [selectedTab]);
+
 
   useEffect(() => {
     setIsMounted(true);
-    setBalanceOf(userBalance?.data);
+    // setBalanceOf(balanceOf?.data);
   }, []);
 
   if (!isMounted) return null;
 
-  if (!web3auth.connected)
-    return (
+    const unloggedInView = (
       <div>
-        <ConnectButton className={styles.connectButton} />
-        <div className={styles.mainContainer}>
-        <h1>Towerbank</h1>
-        <p>El intercambio de USDT - USD entre particulares</p>
-        <p>De onchain a offchain a través de Towerbank</p>
-        <div className={styles.textContainer}>
-          <p>RÁPIDO</p>
-          <p>EFICIENTE</p>
-          <p>SEGURO</p>
-        </div>
-        </div>
+      <div>
+      {/* <div className={styles.mainContainer}> */}
+      <div className="mainContainer">
+      <h1>Towerbank</h1>
+      <p>El intercambio de USDT - USD entre particulares</p>
+      <p>De onchain a offchain a través de Towerbank</p>
+      <div className="textContainer">
+        <p>RÁPIDO</p>
+        <p>EFICIENTE</p>
+        <p>SEGURO</p>
       </div>
+      </div>
+    </div>
+      <button className="bg-[#ca0372] p-2 text-xl font-bold text-center w-1/5 m-auto mt-4 mb-4 border-2 border-stone-800 rounded-md hover:bg-[#ca0372] bg-opacity-50 transition-all disabled:opacity-80 text-xl font-semibold" onClick={login}>
+        Login
+      </button>
+    </div>
+    );
+  
+    const loggedInView = (
+      <>
+
+  
+        <button className="bg-[#ca0372] p-2 text-xl font-bold text-center w-1/5 m-auto mt-4 mb-4 border-2 border-stone-800 rounded-md hover:bg-[#ca0372] hover:opacity-50  transition-all disabled:opacity-80 text-xl font-semibold " onClick={logout}>
+          Log Out
+        </button>
+        {/* </div> */}
+        {/* </div> */}
+      </>
     );
     
     const handleSubmit = (e: any) => {
@@ -1005,121 +970,106 @@ async function getAllowance() {
 
   return (
     // <div className={inter.className}>
-    <div>
+    <div className="main">{loggedIn ? loggedInView : unloggedInView}
+      {loggedIn && (
+       
+        // <link rel="icon" href="/favicon.ico" />
       
-        <title>Towerbank</title>
-        <meta name="description" content="Towerbank" />
-        <link rel="icon" href="/favicon.ico" />
-      
-      {/* Your CryptoDevs NFT Balance: {nftBalanceOfUser.data.toString()} */}
-      {/* {formatEther(daoBalance.data.value).toString()} ETH */}
-      <div className={styles.main}>
+  
+      // <div className={styles.main}>
+      <div className="text-container">
         <div>
-          <div className={styles.containerTitle}>
-            <h1 className={styles.title}>Towerbank</h1>
-            <img className={styles.logo} src="/tron_pay_logo.png" alt="Logo de Towerbank, intercambio p2p de criptomonedas" />
+          <div className="containerTitle">
+            <h1 className="title">Towerbank</h1>
+            <img className="logo" src="/ikigii_logo.png" alt="Logo de Towerbank, intercambio p2p de criptomonedas" />
 
-              <p id="textVersion">Version: {versionTowerbank.data}</p>
-            <p className={styles.description}>Peer to Peer USDT Exchange!</p>
-            <p className={styles.description}>Intercambio de USDT peer to peer </p>
+              {/* <p id="textVersion">Version: {versionTowerbank.data}</p> */}
+            <p className="description">Peer to Peer USDT Exchange!</p>
+            <p className="description">Intercambio de USDT peer to peer </p>
+            {address && <p className="description">Address del user: {address}</p>}
           </div>
 
-          <div className={styles.containerCrear}>
-            {/* <div> */}
-
-              {/* <div className={styles.inputs}>
-                <div>
-                  <label className="block text-purple-500 text-sm font-bold mb-2" htmlFor="price">Valor del Scrow(en ETH)</label>
-                  <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight 
-                  focus:outline-none focus:shadow-outline" type="number" placeholder="Min 0.01 ETH" step="0.001"
-                  value={value} onChange={(e) => setValue((e.target.value))}></input>
-                </div>
-                <div>
-                  <label className="block text-purple-500 text-sm font-bold mb-2" htmlFor="price">Address del seller</label>
-                  <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight 
-                  focus:outline-none focus:shadow-outline" type="text" placeholder="Address del seller" 
-                  value={seller} onChange={(e) => setSeller((e.target.value))}></input>
-                </div>
-              <button onClick={createEscrow}>Crear Escrow</button>
-              </div> */}
-              <div className={styles.inputs}>
-                <div className={styles.containerEscrow}>
-                  {/* <label  htmlFor="price">Valor del Scrow(6 decimales)</label> */}
-                  <label  htmlFor="price">Valor del Scrow(18 decimales)</label>
-                  <input  type="number" placeholder="Min 0.01 ETH" step="0.001" min="0"
-                  value={value} onChange={(e) => setValue((e.target.value))}></input>
-                </div>
-                <div className={styles.containerEscrow}>
-                  <label  htmlFor="price">Address del seller</label>
-                  <input  type="text" placeholder="Address" 
-                  value={seller} onChange={(e) => setSeller((e.target.value))}></input>
-                </div>
-                <div className={styles.buttons}>
-                <button onClick={createEscrow}>Crear Scrow USDT</button> 
-                {/* <button onClick={createEscrowNativeCoin}>Crear Escrow ETH</button> */}
-                <button onClick={createEscrowNativeCoin}>Crear Scrow ETH</button>
-                </div>
-              </div>
+          <div className="containerCrear">
+            
+              
               {/* <div className={styles.containerCompletar}> */}
-              <div className={styles.inputs}>
-                {/* {hash && <div>Transaction Hash: {hash}</div>} */}
-                {/* {isConfirming && <div>Waiting for confirmation...</div>}  */}
-                {/* {isConfirmed && <div>Transaction confirmed.</div>}  */}
-                <div className={styles.containerEscrow}>
-                  <label  htmlFor="price">Número de Escrow USDT a completar</label>
-                  <input  type="number" placeholder="USDT a completar" min="0"
-                  value={releaseNumber} onChange={(e) => setReleaseNumber(parseInt(e.target.value))}></input>
-                </div>
-                  <div className={styles.containerEscrow}>
-                    {/* <label htmlFor="price">Número de Escrow ETH a completar</label> */}
-                    <label htmlFor="price">Número de Escrow ETH a completar</label>
-                    {/* <input  type="number" placeholder="ETH a devolver" min="0" */}
-                    <input  type="number" placeholder="ETH a devolver" min="0"
-                    value={releaseNumberNativeC} onChange={(e) => setReleaseNumberNativeC(parseInt(e.target.value))}></input>
-                  </div>
-                  <div className={styles.buttons}>
-                    <button onClick={releaseEscrow}>Release Escrow USDT</button>
-                    {/* <button onClick={releaseEscrowNativeCoin}>Release Escrow ETH</button> */}
-                    <button onClick={releaseEscrowNativeCoin}>Release Escrow ETH</button>
-                  </div>
-              </div>
+              <h1>AQUI HABIA CREACION Y RELEASE</h1>
               <div>
               {/* {orderId && <p>Order: {parseInt(orderId.data)}</p>} */}
               </div>
             {/* </div>  */}
           </div>
-          
-                      <div className={styles.containerApprove}>
-                    <form className={styles.approve_addStable} onSubmit={handleSubmitApprove}>
-                      <input type="number" placeholder="Valor a aprobar" 
-                      value={approveValue} min={0} step="0.001" onChange={(e) => setApproveValue(parseInt(e.target.value))} />
-                      <button type="submit">Approve</button>
-                    </form> 
-                    <div>
-                    {userBalance.data && <p id="userBalance">USDT user balance: {formatEther(userBalance.data)}</p>}
-                      </div>  
-              </div>
-          <div className={styles.containerData}>
+          <h1>AQUI HABIA APPROVE</h1>
+          <div className="styles.containerData">
                     
             {/* <h1 className={styles.title}>Towerbank</h1> */}
             
-              <div className={styles.containerLastEscrow}>
+              {/* <div className={styles.containerLastEscrow}>
                   <div className={styles.lastEscrowTitle}>
                     <h3>Ultimo Escrow listado</h3>
                   </div>
                   <div className={styles.lastEscrowData}>
-                    {lastEscrow && lastEscrow.data && <p>Dueño del Escrow (Comprador): {lastEscrow.data.buyer}</p>}
-                    {lastEscrow && lastEscrow.data && <p>Dirección del Vendedor: {lastEscrow.data.seller}</p>}
-                    {lastEscrow && lastEscrow.data && <p>Valor: {formatEther(lastEscrow.data.value)}</p>}
-                    {lastEscrow && lastEscrow.data && <p>Estado: {parseInt(lastEscrow.data.status)}</p>}
-                    {orderId && orderId.data && <p>Numero de Escrow: {parseInt(orderId.data) - 1}</p>}
+                    {<p>Dueño del Escrow (Comprador): {lastEscrow?.buyer}</p>}
+                    {lastEscrow && <p>Dirección del Vendedor: {lastEscrow?.seller}</p>}
+                    {lastEscrow && <p>Valor: {formatEther(lastEscrow?.value)}</p>}
+                    {lastEscrow && <p>Estado: {parseInt(lastEscrow?.status)}</p>}
+                    {orderId && <p>Numero de Escrow: {parseInt(orderId.toString()) - 1}</p>}
                   </div>
+              </div> */}
+              <div>
+                <div className="app-offers-container">      
+                  <div className="app-offers-eth">
+                  <h2>Ofertas en ETH</h2>
+                  <div className="app-offers-map">
+                    {nativeOffers.map((offer) => (
+                      <OfferCard key={offer.id} offer={offer} acceptEscrowToken={acceptEscrowToken} acceptEscrowNativeCoin={acceptEscrowNativeCoin} />
+                    ))}
+                    </div>
+                  </div>     
+                </div>
+                
+                <div className="app-offers-container">  
+                <div className="app-offers-token">
+                  <h2>Ofertas en USDT</h2>
+                  <div className="app-offers-map">
+                  {usdtOffers.map((offer) => (
+                    <OfferCard key={offer.id} offer={offer} acceptEscrowToken={acceptEscrowToken} acceptEscrowNativeCoin={acceptEscrowNativeCoin}/>
+                  ))}
+                  </div>
+                  </div>     
+                </div>
+            </div>
+            <div className="offersContainer">
+                  <button
+              
+                      onClick={openForm}
+                    >
+                      PUBLICAR OFERTA
+                  </button>
+                  {isFormVisible && (
+                    <FormularioOferta
+                      datosModal={datosModal}
+                      handleSubmitModal={handleSubmitModal}
+                      handleChange={handleChange}
+                    />
+                  )}
+                    {/* Modal */}
+          {isModalOpen && (
+            <div className="modal-container">
+              <div>
+                <ModalResumen
+                  onCloseModal={closeModal}
+                  datosModal={datosModal}
+                  onConfirm={handleConfirmModal}
+                />
               </div>
-
+            </div>
+              )}
+                  </div>
               <div className={styles.description}>
                 {/*<p>Valor del Escrow: {parseInt(escrowValue.data)}</p>*/}
                 {/*<p>//Estado del Escrow: {parseInt(escrowState.data)}*/}
-                {allowance && allowance.data && <p>Allowance: {formatEther((allowance.data))}</p>}
+                {allowance && <p>Allowance: {formatEther((allowance))}</p>}
                 {/*{lastEscrow && lastEscrow.data && <p>EscrowBuy: {lastEscrow.data.buyer}</p>}
                 {lastEscrow && lastEscrow.data && <p>EscrowSel: {lastEscrow.data.seller}</p>}
                 {lastEscrow && lastEscrow.data && <p>EscrowVal: {formatEther(lastEscrow.data.value)}</p>}
@@ -1129,22 +1079,22 @@ async function getAllowance() {
                 {lastEscrow && lastEscrow.data && <p>EscrowCurr: {lastEscrow.data.currency}</p>} /*}
                   {/* {owner.data && <p>Owner: {owner.data}</p>} */}
                   </div>  
-              {renderTabs()}
+              {/* {renderTabs()} */}
               {/* Display additional withdraw button if connected wallet is owner */}
-              {address && address.toLowerCase() === owner?.data?.toLowerCase() ? (
+              {address && address.toLowerCase() === owner?.toLowerCase() ? (
               <div>
                 {isLoading ? (
-                  <button className={styles.button}>Loading...</button>
+                  <button className="button">Loading...</button>
                 ) : (<div>
                 <div> 
-                  <div className={styles.containerRefunds}>
+                  <div className="containerRefunds">
                     <p>Devolver escrow al dueño (Solo Owner)</p> 
                   <div className={styles.containerEscrowOwner}>
                       <label htmlFor="price">Número de Escrow USDT a devolver</label>
                       <input type="number" placeholder="Número Escrow USDT" min="0"
                       value={refundNumber} onChange={(e) => setRefundNumber(parseInt(e.target.value))}></input>
                       <div className={styles.divRelease}>
-                      <button onClick={refundEscrow}>Devolver USDT</button>
+                      {/* <button onClick={refundEscrow}>Devolver USDT</button> */}
                       </div>
                   </div>
                   <div className={styles.containerEscrowOwner}>
@@ -1155,64 +1105,32 @@ async function getAllowance() {
                     value={refundNumberNativeC} onChange={(e) => setRefundNumberNativeC(parseInt(e.target.value))}></input>
                     <div className={styles.divRelease}>
                     {/* <button onClick={refundEscrowNativeCoin}>Devolver ETH</button> */}
-                    <button onClick={refundEscrowNativeCoin}>Devolver ETH</button>
+                    {/* <button onClick={refundEscrowNativeCoin}>Devolver ETH</button> */}
                     </div>
                   </div>
                 </div>
                 <div className={styles.containerReleases}>
+                  <div>
                     <p>Liberar escrow al vendedor (Solo Owner)</p>
-                  <div className={styles.containerEscrowOwner}>
-                    <label htmlFor="price">Número de Escrow USDT a liberar</label>
-                    {/* <input type="number" placeholder="Número Escrow ETH" min="0"  */}
-                    <input type="number" placeholder="Número Escrow ETH" min="0" 
-                    value={releaseNumber} onChange={(e) => setReleaseNumber(parseInt(e.target.value))}></input>
-                    <div className={styles.divRelease}>
-                    <button onClick={releaseEscrowOwner}>Liberar USDT</button>
-                    </div>
-                  </div>
-                  <div className={styles.containerEscrowOwner}>
-                    {/* <label htmlFor="price">Número de Escrow ETH a liberar</label> */}
-                    <label htmlFor="price">Número de Escrow ETH a liberar</label>
-                    {/* <input type="number" placeholder="Número Escrow ETH" min="0" */}
-                    <input type="number" placeholder="Número Escrow ETH" min="0"
-                    value={releaseNumberNativeC} onChange={(e) => setReleaseNumberNativeC(parseInt(e.target.value))}></input>
-                    <div className={styles.divRelease}>
-                    {/* <button onClick={releaseEscrowNativeCoinOwner}>Liberar ETH</button> */}
-                    <button onClick={releaseEscrowNativeCoinOwner}>Liberar ETH</button>
-                    </div>
+               
                   </div>
                 </div>
                 </div>
                 <div className={styles.containerWithdraw}>
-                <form className={styles.approve_addStable} onSubmit={handleSubmit}>
+                <form className="approveAddStable" onSubmit={handleSubmit}>
                       <input type="text" placeholder="Direccion EstableCoin"
                       value={stableAddress} onChange={(e) => setStableAddress(e.target.value)} />
                       <button type="submit">Añadir StableCoin</button>
                     </form>
-                  <button className={styles.withdrawButton} onClick={withdrawFees}>
+                  {/* <button className={styles.withdrawButton} onClick={withdrawFees}>
                     Retirar Fees USDT
                   </button>
                   <button className={styles.withdrawButton} onClick={withdrawFeesNativeCoin}>
-                    {/* Retirar Fees ETH */}
+                 
                     Retirar Fees ETH
-                  </button>
-                </div>
+                  </button> */}
+                </div> 
                   
-                  <div className={styles.flex}>
-                    <button
-                      className={styles.button}
-                      onClick={() => setSelectedTab("Anuncio USDT")}
-                    >
-                      Crear anuncio 
-                    </button>
-                    {/* <button
-                      className={styles.button}
-                      onClick={() => setSelectedTab("Anuncio ETH")}
-                    >
-                      Crear anuncio ETH
-                    </button> */}
-                  </div>
-                  {renderTabs()}
                   </div>
                 )}
               </div>
@@ -1225,6 +1143,32 @@ async function getAllowance() {
           {/* <img className={styles.image} src="" /> */}
         </div>
       </div>
-    </div>
+        )}
+        {/* <p className="mt-4">ProductId: {actualProductId}</p>
+    <p className="mt-4">ParticipantId: {actualParticipantId}</p> */}
+      {!loggedIn && (
+        // <div  className='p-96 flex-col rounded-md m-auto place-content-center bg-[#292d67]' >
+
+        // </div>
+      <div>
+        <h1>CONECTATE A LA APLICACION</h1>
+        {owner && <p className={styles.description}>Address del owner{owner}</p>}
+        {orderId && <p className={styles.description}>Address del owner{orderId}</p>}
+        {balanceOf && <p className={styles.description}>Balance{balanceOf}</p>}
+        {isMounted && <p className={styles.description}>Contract{isMounted}</p>}
+        {<p className={styles.description}>Allowance{allowance?.toString()}</p>}
+        {<p className={styles.description}>LastEscrow{lastEscrow}</p>}
+        {/* {version && <p className={styles.description}>`version: ${version}`</p>} */}
+        {address ? (
+          <p>Connected Address: {address}</p>
+        ) : (
+          <button onClick={connectWallet}>Connect Wallet</button>
+        )}
+      </div>
+      )}
+      </div>
+  
+   
   );
 }
+

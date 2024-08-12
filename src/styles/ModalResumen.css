@@ -1,0 +1,89 @@
+/* ModalResumen.css */
+
+/* Fondo difuminado del modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  /* pointer-events: none;  */
+}
+
+/* .modal-content{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* background-color: rgba(0, 0, 0, 0.5); 
+  z-index: 1000;
+} */
+
+/* Contenido del modal */
+.modal-content {
+  font-size: 1.2rem;
+  background-color: #0c2d59; /* Fondo del modal */
+  color: #ffffff; /* Color del texto */
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 90vw; /* Máximo ancho del modal en porcentaje del viewport */
+  width: 500px; /* Ancho fijo del modal */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3); /* Sombra para darle profundidad */
+  box-sizing: border-box; /* Incluye padding en el ancho total */
+  z-index: 1001; /* Asegura que el contenido del modal esté por encima del overlay */
+  position: relative; /* Asegura que el modal se posicione sobre el overlay */
+}
+
+/* Evitar interacción con el fondo */
+.modal-overlay.active {
+  pointer-events: auto; /* Activa interacciones con el overlay cuando el modal está activo */
+}
+/* Estilo para los botones del modal */
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.btn-cancel,
+.btn-confirm {
+  background-color: #e2f212; /* Fondo de botón amarillo claro */
+  color: #0c2d59; /* Texto en azul oscuro */
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  text-transform: uppercase;
+  margin: 20px;
+}
+
+.btn-cancel {
+  background-color: #ffffff; /* Rojo para el botón de cancelar */
+  color: #0c2d59;
+  font-size: x-large;
+  border: 1px solid #0c2d59;
+  border-radius: 6px;
+}
+
+.btn-cancel:hover {
+  background-color: #0c2d59; /* Efecto hover para el botón de cancelar */
+  color: #ffffff;
+  border: 1px solid #ffffff;
+  border-radius: 6px;
+}
+
+.btn-confirm:hover {
+  background-color: #d1e510; /* Efecto hover para el botón de aceptar */
+}
+
+.btn-cancel:focus,
+.btn-confirm:focus {
+  outline: none;
+  box-shadow: 0px 0px 5px #b3d335; /* Resaltar botón en focus */
+}

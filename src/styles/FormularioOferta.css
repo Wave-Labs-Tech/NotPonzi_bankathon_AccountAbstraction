@@ -1,0 +1,64 @@
+/* FormularioAnuncio.module.css */
+
+.form {
+  background-color: #0c2d59; /* Fondo del formulario */
+  color: #ffffff; /* Color del texto */
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 500px;
+  margin: auto;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3); /* Sombra para darle profundidad */
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 8px;
+  display: block;
+  color: #ffffff;
+}
+
+input[type="number"],
+input[type="text"],
+textarea {
+  width: calc(
+    100% - 20px
+  ); /* Ajusta el ancho para que el input esté bien alineado con el formulario */
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #b3d335; /* Borde verde brillante */
+  border-radius: 5px;
+  background-color: #1b3b6f; /* Fondo azul oscuro para inputs */
+  color: #ffffff; /* Texto en blanco */
+  font-size: 16px;
+}
+
+input[type="radio"] {
+  margin-right: 10px;
+}
+
+textarea {
+  resize: none; /* Desactivar el redimensionamiento del textarea */
+}
+
+button[type="submit"] {
+  background-color: #e2f212; /* Fondo de botón amarillo claro */
+  color: #0c2d59; /* Texto en azul oscuro */
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  text-transform: uppercase;
+}
+
+button[type="submit"]:hover {
+  background-color: #d1e510; /* Efecto hover para el botón */
+}
+
+button[type="submit"]:focus {
+  outline: none;
+  box-shadow: 0px 0px 5px #b3d335; /* Resaltar botón en focus */
+}

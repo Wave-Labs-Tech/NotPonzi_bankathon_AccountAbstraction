@@ -1,12 +1,6 @@
 import Web3 from "web3";
+import { uiConsole } from './Utils';
 
-export function uiConsole(...args: any[]): void {
-  const el = document.querySelector("#console>p");
-  if (el) {
-    el.innerHTML = JSON.stringify(args || {}, null, 2);
-  }
-  console.log(...args);
-}
 
 export const signMessage = async (message: string, provider: any) => {
     if (!provider) {
