@@ -157,11 +157,14 @@ export default function Home() {
   const [feeSeller, setFeeSeller] = useState<number>(0);
   const [prices, setPrices] = useState<{ [key: string]: { precio: number; nombre: string; } }>({});
   
-
+  const [lastCallTime, setLastCallTime] = useState(Date.now());
   const usdtPrecio = prices['usdt']?.precio;
   const ethPrecio = prices['eth']?.precio;
   const valorEthEnUsd = ethPrecio * usdtPrecio;
   const valorUsdEnEth = usdtPrecio / ethPrecio;
+
+  // let _prices = coinGeckoGetPricesKV({ requestedCoins: ['eth', 'usdt'] });
+  // setPrices(_prices ? _prices : { [key: '']: { precio: '', nombre: '' } });
 
   const fetchFees = useCallback(async (): Promise<void> => {
     try {
@@ -356,16 +359,35 @@ const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
       }
     }, [contract, address, provider, tokenContract]); 
 
-    async function fetchPrices() {
+    async function fetchPrices() { //DESACTIVADA LA LLAMADA A LA API DURANTE EL DESARROLLO
+      const currentTime = Date.now();
+      const timeSinceLastCall = currentTime - lastCallTime;
+
+      // if (timeSinceLastCall < 60000) { // 60000 milisegundos = 60 segundos
+      //   console.log("Esperando...", timeSinceLastCall, "milisegundos desde la última llamada.");
+      //   return; // No realiza la llamada si no ha pasado suficiente tiempo
+      // }
+      // if (lastCallTime === 0 || timeSinceLastCall >= 60000) { // 60000 milisegundos = 60 segundos
+      console.log("Esperando API COINGECKO...", timeSinceLastCall, "milisegundos desde la última llamada.");
+
       try {
-          let prices = await coinGeckoGetPricesKV({ requestedCoins: ['eth', 'usdt'] });
+          // let prices = await coinGeckoGetPricesKV({ requestedCoins: ['eth', 'usdt'] });
+          let prices = {
+            eth: { precio: 2626.5, nombre: "Ethereum" },
+            usdt: { precio: 1.01, nombre: "Tether" }
+          };
+
           setPrices(prices);
+          setLastCallTime(currentTime); // Actualiza el tiempo de la última llamada
           // console.log("PRICES", prices);
           // console.log(prices['eth'].precio); // Precio de ETH
           // console.log(prices['usdt'].precio); // Precio de USDT
       } catch (error) {
           console.error("Error fetching prices:", error);
       }
+    // } else {
+    //   console.log("Esperando...", currentTime - lastCallTime, "milisegundos desde la última llamada.");
+    // }
   }
 
   useEffect(() => {
