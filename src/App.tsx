@@ -506,28 +506,10 @@ const login = async () => {
       // const totalCost = convertFromBigNumber(cost, 18);
       // console.log("totalCost", totalCost);
       const totalCost = value * price;
-
-
-      // Convertir 'price' de Eth a su unidad más pequeña 
-      const pricePerUsdtInEth = BigInt(ethers.parseEther(price.toString()));
-      console.log("pricePerUsdtInEth", pricePerUsdtInEth);
       
-      // Convertir 'value' de USDT a su unidad más pequeña (asumiendo 6 decimales para USDT)
-      const valueInWei = BigInt(ethers.parseUnits(value.toString(), 6));
-      console.log("valueInWei", valueInWei);
+      let valueInWei = BigInt(value * Math.pow(10, 18));
+      let totalCostInWei = BigInt(totalCost *  Math.pow(10, 6))
 
-      // Realizar la multiplicación
-      const totalCostInWei = valueInWei * pricePerUsdtInEth;
-
-      console.log("totalCostInWei", totalCostInWei );
-
-      let totalCostAsString = (totalCostInWei / BigInt(Math.pow(10, 6))).toString().slice(-6);
-
-      console.log("totalCostAsString", totalCostAsString);
-
-      console.log("DATOS Modal previo nueva offer token", datosModal)
-      // const addEscrowTokenTx = await contract.createEscrowToken(valueUsdtBig, totalCost, USDTAddress, {
-      // const addEscrowTokenTx = await contract.createEscrowToken(valueInWei, totalCostInWei, USDTAddress, {
       const addEscrowTokenTx = await contract.createEscrowToken(valueInWei, totalCostInWei, USDTAddress, {
           gasLimit: 5000000,
         });
