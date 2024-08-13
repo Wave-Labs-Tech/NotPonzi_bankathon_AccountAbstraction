@@ -16,7 +16,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { uiConsole, convertToBigNumber, convertFromBigNumber } from './utils/Utils';
 import truncateEthAddress from 'truncate-eth-address';
-
+import { coinGeckoGetPricesKV, coinGeckoGetPricesList } from './utils/Prices'
 
 
 
@@ -26,7 +26,6 @@ import { EthereumPrivateKeyProvider } from "@web3auth/ethereum-provider";
 import { CHAIN_NAMESPACES, IProvider, UserInfo, WEB3AUTH_NETWORK } from "@web3auth/base";
 import { Contract, ethers, formatEther, hashMessage, JsonRpcProvider, Wallet } from 'ethers';
 
-import { addItemToLocalStorage, initializeExistingPrefixes, findItemsByInitialNumbers }from './utils/StorageFuntions';
 // import truncateEthAddress from 'truncate-eth-address';
 import "./App.css";
 import styles from './App.module.css';
@@ -41,9 +40,9 @@ import { Toast } from "react-toastify/dist/components";
 
 
 // console.log("ABI CONTRACT", TowerbankABI);
-console.log("ADDRESS CONTRACT", CONTRACT_ADDRESS);
+// console.log("ADDRESS CONTRACT", CONTRACT_ADDRESS);
 // console.log("ABI TokenClass", USDTABI);
-console.log("ADDRESS Token", USDTAddress);
+// console.log("ADDRESS Token", USDTAddress);
 //BORRAR AL RESCUPERAR WEB3AUTH
 //BORRAR AL RESCUPERAR WEB3AUTH
 //BORRAR AL RESCUPERAR WEB3AUTH
@@ -156,19 +155,27 @@ export default function Home() {
   // const [balance, setBalance] = useState<number>(0);
   const [feeBuyer, setFeeBuyer] = useState<number>(0);
   const [feeSeller, setFeeSeller] = useState<number>(0);
+  const [prices, setPrices] = useState<{ [key: string]: { precio: number; nombre: string; } }>({});
   
+
+  const usdtPrecio = prices['usdt']?.precio;
+  const ethPrecio = prices['eth']?.precio;
+  const valorEthEnUsd = ethPrecio * usdtPrecio;
+  const valorUsdEnEth = usdtPrecio / ethPrecio;
+
   const fetchFees = useCallback(async (): Promise<void> => {
     try {
-      let _feeSeller = await contract?.feeSeller();
+      let _feeSeller = await getFeeSeller();
       setFeeSeller(_feeSeller || 0);
   
-      let _feeBuyer = await contract?.feeBuyer();
+      let _feeBuyer = await getFeeBuyer();
       setFeeBuyer(_feeBuyer || 0);
     } catch (error) {
       console.error("Error al obtener las fees:", error);
       // Maneja el error según sea necesario
     }
-  }, [contract]); 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
 
   // useEffect(() => {
   //   const init = async () => {
@@ -307,14 +314,14 @@ const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   
         for (let i = 0; i < orderId; i++) {
           const escrow = await contract.getEscrow(i);
-          console.log("ESCROW en FOR", escrow);
+          // console.log("ESCROW en FOR", escrow);
           if (escrow?.[2].toString()!== '0') {
             // Crear un objeto que incluya el id
             const offer = {
               id: i, // Asocia el id del índice al escrow
               ...escrow,
             };
-            console.log("Oferta en FOR", offer);
+            // console.log("Oferta en FOR", offer);
           if (escrow.status !== 'Completed') {
             if (escrow.escrowNative) {
               fetchedNativeOffers.push(offer);
@@ -337,10 +344,11 @@ const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
         setBalanceOf(balance);
         const _balance =  await provider?.getBalance(address);
         setEthBalance(_balance? ethers.formatEther(_balance) : '');
-        console.log("OFFERS EN USE_EFEFCT", fetchedNativeOffers);
-        console.log("OFFERS EN USE_EFEFCT", fetchedUsdtOffers);
+        // console.log("OFFERS NATIVE EN USE_EFEFCT", fetchedNativeOffers);
+        // console.log("OFFERS USDT EN USE_EFEFCT", fetchedUsdtOffers);
         setNativeOffers(fetchedNativeOffers);
         setUsdtOffers(fetchedUsdtOffers);
+        
       } catch (error) {
         console.error("Error al obtener ofertas:", error);
       } finally {
@@ -348,14 +356,28 @@ const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
       }
     }, [contract, address, provider, tokenContract]); 
 
-   
+    async function fetchPrices() {
+      try {
+          let prices = await coinGeckoGetPricesKV({ requestedCoins: ['eth', 'usdt'] });
+          setPrices(prices);
+          // console.log("PRICES", prices);
+          // console.log(prices['eth'].precio); // Precio de ETH
+          // console.log(prices['usdt'].precio); // Precio de USDT
+      } catch (error) {
+          console.error("Error fetching prices:", error);
+      }
+  }
 
   useEffect(() => {
     fetchOffers();
     fetchFees();
+    fetchPrices();
+//     let prices: any = coinGeckoGetPricesKV({ requestedCoins:['eth', 'usdt']});
+//         console.log("PRICES", prices);
+//         console.log(prices?.['eth']?.['precio']); // Accede al precio de Ethereum
+// console.log(prices?.usdt?.nombre);
   }, [contract, fetchFees, fetchOffers, orderId]);
 
-  
   //-------->>>>>COMENTAR ESTA FUNCION Y DESCOMENTAR LA de web3auth PARA PERMITIR WEB3AUTH<<<<<<--------
   const connectWallet = async () => {
     if (window.ethereum) {
@@ -481,10 +503,10 @@ const login = async () => {
 
       console.log("totalCostAsString", totalCostAsString);
 
-
+      console.log("DATOS Modal previo nueva offer token", datosModal)
       // const addEscrowTokenTx = await contract.createEscrowToken(valueUsdtBig, totalCost, USDTAddress, {
       // const addEscrowTokenTx = await contract.createEscrowToken(valueInWei, totalCostInWei, USDTAddress, {
-      const addEscrowTokenTx = await contract.createEscrowToken(valueInWei.toString(), totalCostInWei.toString(), USDTAddress, {
+      const addEscrowTokenTx = await contract.createEscrowToken(valueInWei, totalCostInWei, USDTAddress, {
           gasLimit: 5000000,
         });
       await addEscrowTokenTx.wait();
@@ -710,7 +732,7 @@ const login = async () => {
     async function getVersion() {
       try {
         const version = await contract?.version();
-        console.log("XXversion",version); // Imprime la versión obtenida del contrato
+        // console.log("XXversion",version); // Imprime la versión obtenida del contrato
         return version;
       } catch (error) {
         console.error("Error al obtener la versión:", error);
@@ -1091,22 +1113,21 @@ const closeModal = () => {
             <p className="description">Intercambio de USDT-ETH entre particulares</p>
             {address && <p className="show-balance">Dirección del usuario: {truncateEthAddress(address)}</p>}
             <div className="balances-container">
-              {ethBalance && <p className="show-balance">Balance de UDSDT: {balanceOf.toString()}</p>}
+              {ethBalance && <p className="show-balance">Balance de USDT: {balanceOf.toString()}</p>}
               {ethBalance && <p className="show-balance">Balance de ETH: {ethBalance}</p>}
             </div>
           </div>
-
-          <div className="containerCrear">
-            
-              
-              {/* <div className={styles.containerCompletar}> */}
-              <h1>AQUI HABIA CREACION Y RELEASE</h1>
-              <div>
-              {/* {orderId && <p>Order: {parseInt(orderId.data)}</p>} */}
-              </div>
-            {/* </div>  */}
+          <div className='app-price-container'>
+          <div className='app-prices'>
+            {prices && <p>ETH - DOLLAR:  {ethPrecio} </p>}
+            {prices && <p>USDT - DOLLAR:  {usdtPrecio} </p>}
           </div>
-          <h1>AQUI HABIA APPROVE</h1>
+            <div className='app-prices'>
+            {prices && <p>ETH - USDT: {valorEthEnUsd} </p>}
+            {prices && <p>USDT - ETH: {valorUsdEnEth} </p>}
+
+        </div>
+        </div>
           <div className="styles.containerData">
                     
             {/* <h1 className={styles.title}>Towerbank</h1> */}
@@ -1163,6 +1184,7 @@ const closeModal = () => {
                 onCloseForm={handleCloseForm}
                 ethBalance={ethBalance}
                 balanceOf={balanceOf}
+                prices={prices}
               />
             )
           )}
@@ -1182,7 +1204,7 @@ const closeModal = () => {
               <div className={styles.description}>
                 {/*<p>Valor del Escrow: {parseInt(escrowValue.data)}</p>*/}
                 {/*<p>//Estado del Escrow: {parseInt(escrowState.data)}*/}
-                {allowance && <p>Allowance: {formatEther((allowance))}</p>}
+                {/* {allowance && <p>Allowance: {formatEther((allowance))}</p>} */}
                 {/*{lastEscrow && lastEscrow.data && <p>EscrowBuy: {lastEscrow.data.buyer}</p>}
                 {lastEscrow && lastEscrow.data && <p>EscrowSel: {lastEscrow.data.seller}</p>}
                 {lastEscrow && lastEscrow.data && <p>EscrowVal: {formatEther(lastEscrow.data.value)}</p>}
@@ -1229,12 +1251,12 @@ const closeModal = () => {
                   </div>
                 </div>
                 </div>
-                <div className={styles.containerWithdraw}>
+                {/* <div className={styles.containerWithdraw}>
                 <form className="approveAddStable" onSubmit={handleSubmit}>
                       <input type="text" placeholder="Direccion EstableCoin"
                       value={stableAddress} onChange={(e) => setStableAddress(e.target.value)} />
                       <button type="submit">Añadir StableCoin</button>
-                    </form>
+                    </form> */}
                   {/* <button className={styles.withdrawButton} onClick={withdrawFees}>
                     Retirar Fees USDT
                   </button>
@@ -1242,7 +1264,7 @@ const closeModal = () => {
                  
                     Retirar Fees ETH
                   </button> */}
-                </div> 
+                {/* </div>  */}
                   
                   </div>
                 )}

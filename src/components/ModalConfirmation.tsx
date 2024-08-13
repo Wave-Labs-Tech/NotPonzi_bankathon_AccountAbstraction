@@ -14,8 +14,8 @@ interface ConfirmationModalProps {
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ show, onClose, onConfirm, offer }) => {
     if (!show) return null; // No renderiza nada si el modal no debe mostrarse
-    console.log("OFFER EN MODAL", offer);
-    console.log("Id EN MODAL", offer.id);
+    // console.log("OFFER EN MODAL", offer);
+    // console.log("Id EN MODAL", offer.id);
     return (
       <div className="modal-overlay-confirmation">
         <div className="modal-content-confirmation">

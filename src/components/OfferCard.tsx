@@ -11,8 +11,8 @@ interface OfferCardProps {
   }
   const OfferCard: React.FC<OfferCardProps> = ({ offer, acceptEscrowToken, acceptEscrowNativeCoin }) => {
       const [showModal, setShowModal] = useState(false);
-      console.log("OFFER EN CARD", offer);
-      console.log("Id EN CARD", offer.id);
+      // console.log("OFFER EN CARD", offer);
+      // console.log("Id EN CARD", offer.id);
       
     const handleAccept = () => {
       if (offer[6]) {//comprobar si es escrowNative

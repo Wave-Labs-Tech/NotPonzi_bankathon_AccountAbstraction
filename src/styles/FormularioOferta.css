@@ -22,6 +22,9 @@
 .inputs-container label {
   margin-top: 20px;
 }
+.inputs-container p {
+  font-size: 1.2rem;
+}
 .form input[type="number"],
 .form input[type="text"],
 .form textarea {
@@ -88,4 +91,14 @@
   /* color: #ffffff; */
 }
 .form-close-button-container {
+}
+.form-price-container {
+  display: flex;
+}
+.form-prices {
+  background-color: #16213e;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 5px;
+  /* border: 1px solid #ffffff; */
 }

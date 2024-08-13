@@ -16,11 +16,20 @@ type FormularioOfertaProps = {
   onCloseForm: () => void;
   balanceOf: number;
   ethBalance: string;
+  prices: {
+    [key: string]: {
+      precio: number;
+      nombre: string;
+    };
+  };
 };
-
 // function ModalResumen({ onCloseModal, cripto, amount, price, payment_mode }){
-const FormularioOferta: React.FC<FormularioOfertaProps> = ({ handleSubmitModal, datosModal, handleChange, onCloseForm, ethBalance, balanceOf }) => {
-
+  const FormularioOferta: React.FC<FormularioOfertaProps> = ({ handleSubmitModal, datosModal, handleChange, onCloseForm, ethBalance, balanceOf, prices }) => {
+    const usdtPrecio = prices['usdt']?.precio;
+    const ethPrecio = prices['eth']?.precio;
+    const valorEthEnUsd = ethPrecio * usdtPrecio;
+    const valorUsdEnEth = usdtPrecio / ethPrecio;
+    
   const handleClose = () => {
     onCloseForm(); // Reinicia datosModal y cierra el formulario
   };
@@ -28,9 +37,20 @@ const FormularioOferta: React.FC<FormularioOfertaProps> = ({ handleSubmitModal, 
     <div className="form">
 
       <form onSubmit={handleSubmitModal}>
-
         {/* <div className={styles.container}> */}
-          <button className="form-close-button" onClick={handleClose}>x</button>
+        <div className='form-price-container'>
+          <div className='form-prices'>
+            {prices && <p>ETH - DOLLAR:  {ethPrecio} </p>}
+            {prices && <p>USDT - DOLLAR:  {usdtPrecio} </p>}
+          </div>
+            <div className='form-prices'>
+            {prices && <p>ETH - USDT: {valorEthEnUsd} </p>}
+            {prices && <p>USDT - ETH: {valorUsdEnEth} </p>}
+            </div>
+            <div>
+            <button className="form-close-button" onClick={handleClose}>x</button>
+          </div>
+        </div>
         <div>
           <label htmlFor="usdt">
             <input type="radio" id="usdt" name="crypto" value="usdt" checked={datosModal.crypto === "usdt"} onChange={handleChange} />

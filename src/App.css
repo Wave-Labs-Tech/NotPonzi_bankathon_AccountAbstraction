@@ -1,6 +1,6 @@
 /*
-AZUL 1: 
-AZUL 2: #1b3b6f
+AZUL 1: #0c2d59 claro
+AZUL 2: #1b3b6f medio
 */
 .modal-custom {
   /* display: flex; */
@@ -252,4 +252,17 @@ AZUL 2: #1b3b6f
   background-color: #2d5fbf;
   border-radius: 8px;
   padding: 1%;
+}
+.app-price-container {
+  display: flex;
+  justify-content: space-around;
+}
+.app-prices {
+  background-color: #0c2d59;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 5px;
+  width: 40%;
+  font-size: 1.2rem;
+  /* border: 1px solid #ffffff; */
 }

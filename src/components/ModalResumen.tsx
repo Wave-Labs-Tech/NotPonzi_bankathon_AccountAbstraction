@@ -20,7 +20,7 @@ type ModalResumenProps = {
 // function ModalResumen({ onCloseModal, cripto, amount, price, payment_mode }){
   const ModalResumen: React.FC<ModalResumenProps> = ({ onCloseModal, datosModal, onConfirm }) => {
   const isValidCrypto = datosModal.crypto === "usdt" || datosModal.crypto === "eth";
-  console.log("Este es el modalc con sus datos", datosModal);
+  // console.log("Estos son los datos del modal", datosModal);
   return (
     <div className="modal-overlay">
       <div className="modal-content">
