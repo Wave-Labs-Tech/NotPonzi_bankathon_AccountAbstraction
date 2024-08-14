@@ -1,18 +1,18 @@
-// ConfirmationModal.tsx
+// CancelationModal.tsx
 import React from 'react';
 import '../styles/ModalConfirmation.css'; // Asegúrate de crear este archivo CSS
 // import { Modal, Button } from 'react-bootstrap'; 
 
 
 
-interface ConfirmationModalProps {
+interface CancelationModalProps {
   show: boolean;
   onClose: () => void;
   onConfirm: () => void;
   offer: any;
 }
 
-const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ show, onClose, onConfirm, offer }) => {
+const CancelationModal: React.FC<CancelationModalProps> = ({ show, onClose, onConfirm, offer }) => {
     if (!show) return null; // No renderiza nada si el modal no debe mostrarse
     // console.log("OFFER EN MODAL", offer);
     // console.log("Id EN MODAL", offer.id);
@@ -20,8 +20,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ show, onClose, on
       <div className="modal-overlay-confirmation">
         <div className="modal-content-confirmation">
           <button className="modal-close-confirmation" onClick={onClose}>X</button>
-          <h2>Confirmar</h2>
-          <p>¿Estás seguro de que quieres aceptar esta oferta?</p>
+          <h2>Cancelar</h2>
+          <p>¿Estás seguro de que quieres cancelar esta oferta?</p>
           <p>Detalles de la oferta: {offer?.id}</p>
           <ul>
             <li>Valor: {offer?.[2].toString()}</li>
@@ -32,11 +32,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ show, onClose, on
           </ul>
           <div className="modal-actions-confirmation">
             <button className="modal-button-confirmation-cancel" onClick={onClose}>x</button>
-            <button className="modal-button-confirmation-confirm" onClick={onConfirm}>Aceptar</button>
+            <button className="modal-button-confirmation-confirm" onClick={onConfirm}>Cancelar</button>
           </div>
         </div>
       </div>
     );
   };
   
-  export default ConfirmationModal;
+  export default CancelationModal;

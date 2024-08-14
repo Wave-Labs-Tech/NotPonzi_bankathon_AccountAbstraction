@@ -10,10 +10,10 @@ type ModalResumenProps = {
   type DatosModal = {
     // crypto: "usdt" | "eth"; // Cambia esto si hay más opciones
     crypto: string; 
-    amount: number;
-    price: number;
-    maximo: number;
-    minimo: number;
+    value: string;
+    price: string;
+    maximo: string;
+    minimo: string;
     conditions: string;
   };
 
@@ -26,10 +26,10 @@ type ModalResumenProps = {
       <div className="modal-content">
         {/* <p>{datosModal.crypto === "usdt"? "USDT" : "ETH"}</p> */}
         <p>{isValidCrypto ? datosModal.crypto.toUpperCase() : "Criptomoneda no válida"}</p>
-        <p>Cantidad disponible: {datosModal.amount}</p>
+        <p>Cantidad disponible: {datosModal.value}</p>
         <p>Precio por unidad: {datosModal.price}</p>
-        <p>Límite máximo de venta: {datosModal.maximo}</p>
-        <p>Límite mínimo de venta: {datosModal.minimo}</p>
+        {/* <p>Límite máximo de venta: {datosModal.maximo}</p>
+        <p>Límite mínimo de venta: {datosModal.minimo}</p> */}
         {/* <p>Modo de pago: { datosModal.payment_mode}</p>
       <p>Ubicación: { datosModal.location}</p> */}
         <p>Condiciones de venta: {datosModal.conditions}</p>

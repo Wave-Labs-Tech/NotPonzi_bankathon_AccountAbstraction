@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import styles from '../styles/FormularioAnuncio.module.css';
+import React from 'react';
+// import styles from '../styles/FormularioAnuncio.module.css';
 import '../styles/FormularioOferta.css';
 
 type FormularioOfertaProps = {
@@ -7,8 +7,8 @@ type FormularioOfertaProps = {
   datosModal: {
     // Define aquí los tipos de los campos dentro de datosModal
     crypto: string;
-    amount: number;
-    price: number;
+    value: string;
+    price: string;
     conditions: string;
     // Agrega más propiedades según lo que tengas en datosModal
   };
@@ -23,13 +23,14 @@ type FormularioOfertaProps = {
     };
   };
 };
-// function ModalResumen({ onCloseModal, cripto, amount, price, payment_mode }){
+// function ModalResumen({ onCloseModal, cripto, value, price, payment_mode }){
   const FormularioOferta: React.FC<FormularioOfertaProps> = ({ handleSubmitModal, datosModal, handleChange, onCloseForm, ethBalance, balanceOf, prices }) => {
     const usdtPrecio = prices['usdt']?.precio;
     const ethPrecio = prices['eth']?.precio;
     const valorEthEnUsd = ethPrecio * usdtPrecio;
     const valorUsdEnEth = usdtPrecio / ethPrecio;
     
+  console.log("Datos modal formulario", datosModal);
   const handleClose = () => {
     onCloseForm(); // Reinicia datosModal y cierra el formulario
   };
@@ -62,12 +63,12 @@ type FormularioOfertaProps = {
           </label>
         </div>
         <div className="inputs-container">
-          <label htmlFor="amount">Cantidad</label>
-          <input type="number" id="amount" name="amount" min="0" step={0.001}  placeholder="Cantidad" value={datosModal.amount}
+          <label htmlFor="value">Cantidad</label>
+          <input type="text" id="value" name="value" placeholder="Cantidad. Por ejemplo 2.45" value={datosModal.value}
             onChange={handleChange}></input>
             <p>Disponible: {datosModal.crypto === "usdt"? balanceOf.toString() : ethBalance}</p>
           <label htmlFor="price">Precio por unidad</label>
-          <input type="number" id="price" name="price" min="0" step={0.001} placeholder="Precio unidad en USD" value={datosModal.price}
+          <input type="text" id="price" name="price" placeholder="Precio unidad. Por ejemplo 0.0025" value={datosModal.price}
             onChange={handleChange}></input>
           {/*         <label htmlFor="payment_mode">Modo de pago</label><br></br> */}
           {/* <div className={styles.container}>
