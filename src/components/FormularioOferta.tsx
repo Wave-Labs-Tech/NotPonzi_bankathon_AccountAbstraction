@@ -63,12 +63,12 @@ type FormularioOfertaProps = {
           </label>
         </div>
         <div className="inputs-container">
-          <label htmlFor="value">Cantidad</label>
+          <label htmlFor="value">Cantidad - Usar 18 decimales para ETH y 6 para USDT</label>
           <input type="text" id="value" name="value" placeholder="Cantidad. Por ejemplo 2.45" value={datosModal.value}
             onChange={handleChange}></input>
             <p>Disponible: {datosModal.crypto === "usdt"? balanceOf.toString() : ethBalance}</p>
           <label htmlFor="price">Precio por unidad</label>
-          <input type="text" id="price" name="price" placeholder="Precio unidad. Por ejemplo 0.0025" value={datosModal.price}
+          <input type="text" id="price" name="price" placeholder="Ejemplo 4500000 USDT o 10000000000000000 ETH" value={datosModal.price}
             onChange={handleChange}></input>
           {/*         <label htmlFor="payment_mode">Modo de pago</label><br></br> */}
           {/* <div className={styles.container}>

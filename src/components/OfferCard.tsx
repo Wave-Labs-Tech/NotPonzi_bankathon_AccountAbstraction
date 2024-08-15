@@ -9,7 +9,7 @@ interface OfferCardProps {
     offer: any;
     acceptEscrowToken: (id: number, cost: number) => void;
     acceptEscrowNativeCoin: (id: number, cost: number) => void;
-    cancelEscrow: (id: number) => void;
+    cancelEscrow: (id: number, value: number) => void;
     address: string;
   }
   const OfferCard: React.FC<OfferCardProps> = ({ offer, acceptEscrowToken, acceptEscrowNativeCoin, cancelEscrow, address }) => {
@@ -22,13 +22,13 @@ interface OfferCardProps {
       if (offer[6]) {//comprobar si es escrowNative
         acceptEscrowNativeCoin(offer.id, offer?.[3]);
       } else {
-        acceptEscrowToken(offer.id, offer?.[3]);
+        acceptEscrowToken(offer?.id, offer?.[3]);
       }
       setShowModal(false);
     };
     const handleCancel = () => {
       if (offer[1] === address) {//comprobar si es escrowNative
-        cancelEscrow(offer.id);
+        cancelEscrow(offer.id, offer[2]);
       } 
       setShowModal(false);
     };

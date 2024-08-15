@@ -2,7 +2,7 @@
 import React from 'react';
 import '../styles/ModalConfirmation.css'; // Asegúrate de crear este archivo CSS
 // import { Modal, Button } from 'react-bootstrap'; 
-
+import truncateEthAddress from 'truncate-eth-address';
 
 
 interface CancelationModalProps {
@@ -22,13 +22,13 @@ const CancelationModal: React.FC<CancelationModalProps> = ({ show, onClose, onCo
           <button className="modal-close-confirmation" onClick={onClose}>X</button>
           <h2>Cancelar</h2>
           <p>¿Estás seguro de que quieres cancelar esta oferta?</p>
-          <p>Detalles de la oferta: {offer?.id}</p>
+          <p>Número de oferta: {offer?.id}</p>
           <ul>
             <li>Valor: {offer?.[2].toString()}</li>
             <li>Coste: {offer?.[3].toString()}</li>
             <p>Tipo: {offer?.[6]? 'ETF': 'UDST'}</p>
-            <li>Vendedor: {offer?.[1]}</li>
-            <li>Comision: {offer?.[8].toString()}</li>
+            <li>Vendedor: {truncateEthAddress(offer?.[1])}</li>
+            <li>Comision: {offer?.[8].toString()}</li> 
           </ul>
           <div className="modal-actions-confirmation">
             <button className="modal-button-confirmation-cancel" onClick={onClose}>x</button>

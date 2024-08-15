@@ -2,6 +2,7 @@
 import React from 'react';
 import '../styles/ModalConfirmation.css'; // Asegúrate de crear este archivo CSS
 // import { Modal, Button } from 'react-bootstrap'; 
+import truncateEthAddress from 'truncate-eth-address';
 
 
 
@@ -27,7 +28,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ show, onClose, on
             <li>Valor: {offer?.[2].toString()}</li>
             <li>Coste: {offer?.[3].toString()}</li>
             <p>Tipo: {offer?.[6]? 'ETF': 'UDST'}</p>
-            <li>Vendedor: {offer?.[1]}</li>
+            <li>Vendedor: {truncateEthAddress(offer?.[1])}</li>
             <li>Comision: {offer?.[8].toString()}</li>
           </ul>
           <div className="modal-actions-confirmation">

@@ -761,7 +761,7 @@ console.log(`El valor de ${value} ETH en USDT (en Wei) es: ${totalInETH.toString
       }
     } 
   /// ================== Cancelar oferta  ==================
-  async function cancelEscrow(orderId: number) {
+  async function cancelEscrow(orderId: number, value: number) {
     setIsLoading(true);
     // const message = "Hola, Towerbank pagará el gas por ti";
     // const hash = hashMessage(message);
@@ -773,9 +773,14 @@ console.log(`El valor de ${value} ETH en USDT (en Wei) es: ${totalInETH.toString
     }
 
     try {
-      // const addParticipantID = await contract.participant_id(); // Asegúrate de que este método existe y devuelve el último productId
-      // const addEscrowTokenTx = await contract.addParticipant(address, hash, signature, value, cost, USDTAddress) {
-      // const addEscrowTokenTx = await contract.addParticipant( value, cost, USDTAddress {
+      
+     // const addApproveTokenTx = await tokenContract.approve(CONTRACT_ADDRESS, valueInUSDTWei + fee, {
+      const addApproveTokenTx = await tokenContract?.approve(CONTRACT_ADDRESS, value, {
+        gasLimit: 5000000,
+      });
+      await addApproveTokenTx.wait(); 
+      console.log("Approve Cancel escrow", addApproveTokenTx);
+  
       const cancelTx = await tokenContract?.cancelEscrow(orderId, {
           gasLimit: 5000000,
         });
@@ -790,7 +795,7 @@ console.log(`El valor de ${value} ETH en USDT (en Wei) es: ${totalInETH.toString
     } catch (error) {
       console.error(error);
       // window.alert(error);
-      toast.error("No se ha podido aprobar");
+      toast.error("No se ha podido cancelar la oferta");
     }
    setIsLoading(false);
   } 
