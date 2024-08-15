@@ -1,7 +1,7 @@
 import { USDTABI } from "./assets/abis/UsdtABI";
 import { CONTRACT_ADDRESS } from "./assets/constants";
 import { USDTAddress } from "./assets/constants";
-import { TowerbankABI } from "./assets/abis/Towerbank_ABI";
+import { TowerbankABI } from "./assets/abis/TowerbankABI";
 // import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState, useCallback } from "react";
 // import { formatEther, parseUnits } from "viem/utils";
@@ -14,7 +14,7 @@ import FormularioOferta from './components/FormularioOferta'
 import OfferCard from "./components/OfferCard";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { convertToBigNumber, uiConsole} from './utils/Utils';
+import {uiConsole} from './utils/Utils';
 import truncateEthAddress from 'truncate-eth-address';
 
 // import { coinGeckoGetPricesKV, coinGeckoGetPricesList } from './utils/Prices'
@@ -108,11 +108,11 @@ export default function Home() {
 
   // State variable to show loading state when waiting for a transaction to go through
   // const [loading,setIsLoading] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   // State variable to switch between the 'Create Proposal' and 'View Proposals' tabs
   // const [version, setVersion] = useState('');
   // const [stableAddress, setStableAddress] = useState('');
-  const [approveValue, setApproveValue] = useState('');
+  // const [approveValue, setApproveValue] = useState('');
   // const [releaseNum, setReleaseNum] = useState(0);
   // const [refundNumber, setRefundNumber] = useState(0);
   // const [refundNumberNativeC, setRefundNumberNativeC] = useState(0);
@@ -141,7 +141,7 @@ export default function Home() {
   const [address, setAddress] = useState<string>("");
   const [contract, setContract] = useState<Contract | null>(null);
   const [tokenContract, setTokenContract] = useState<Contract | null>(null);
-  const [lastEscrow] = useState<any | null>(null);
+  // const [lastEscrow] = useState<any | null>(null);
   const [owner, setOwner] = useState('');
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [nativeOffers, setNativeOffers] = useState<any[]>([]);
@@ -156,8 +156,8 @@ export default function Home() {
   const ethPrecio = prices['eth']?.precio;
   const valorEthEnUsd = ethPrecio * usdtPrecio;
   const valorUsdEnEth = usdtPrecio / ethPrecio;
-  const [valueTransfer, setValueTransfer] = useState('');
-  const [addressTransfer, setAddressTransfer] = useState('');
+  // const [valueTransfer, setValueTransfer()] = useState('');
+  // const [addressTransfer, setAddressTransfer()] = useState('');
 
   // let _prices = coinGeckoGetPricesKV({ requestedCoins: ['eth', 'usdt'] });
   // setPrices(_prices ? _prices : { [key: '']: { precio: '', nombre: '' } });
@@ -628,12 +628,12 @@ console.log(`El valor de ${value} ETH en USDT (en Wei) es: ${totalInETH.toString
               // Intentar agregar el escrow nativo
       
           const addEscrowNativeTx = await contract.createEscrowNativeCoin(
-            '111', // Asumiendo que 'valueInWei' es el valor correcto a pasar
-            '1111111', // Asumiendo que 'totalCostAsString' es el valor correcto a pasar
+            totalInUSDT, // Asumiendo que 'valueInWei' es el valor correcto a pasar
+            totalInUSDTWei, // Asumiendo que 'totalCostAsString' es el valor correcto a pasar
             USDTAddress, // Asegúrate de que 'USDTAddress' es válido
             {
               gasLimit: 5000000,
-              value: '111' // Asegúrate de que este es el valor correcto a pasar como parte de la transacción
+              value: totalInUSDT // Asegúrate de que este es el valor correcto a pasar como parte de la transacción
             }
           );
           await addEscrowNativeTx.wait();
@@ -775,13 +775,14 @@ console.log(`El valor de ${value} ETH en USDT (en Wei) es: ${totalInETH.toString
     try {
       
      // const addApproveTokenTx = await tokenContract.approve(CONTRACT_ADDRESS, valueInUSDTWei + fee, {
-      const addApproveTokenTx = await tokenContract?.approve(CONTRACT_ADDRESS, value, {
-        gasLimit: 5000000,
-      });
-      await addApproveTokenTx.wait(); 
-      console.log("Approve Cancel escrow", addApproveTokenTx);
-  
-      const cancelTx = await tokenContract?.cancelEscrow(orderId, {
+      // const addApproveTokenTx = await tokenContract?.approve(CONTRACT_ADDRESS, value, {
+      //   gasLimit: 5000000,
+      // });
+      // await addApproveTokenTx.wait(); 
+      // console.log("Approve Cancel escrow", addApproveTokenTx);
+      
+      console.log("OrderId del escrow a cancelar", orderId);
+      const cancelTx = await contract?.cancelEscrow(orderId, {
           gasLimit: 5000000,
         });
       await cancelTx.wait();
@@ -993,88 +994,88 @@ async function getAllowance() {
 
 
   /// ================== Approve el user a Towerbank  ==================
-  async function approve() {
-    setIsLoading(true);
-    // const message = "Hola, Towerbank pagará el gas por ti";
-    // const hash = hashMessage(message);
-    // console.log("HASH", hash);
-    // const signature = await signMessage(message, provider);
-    // console.log("SIGNATURE", signature);
-    if (!contract) {
-      throw new Error("Contract not found");
-    }
+  // async function approve() {
+  //   setIsLoading(true);
+  //   // const message = "Hola, Towerbank pagará el gas por ti";
+  //   // const hash = hashMessage(message);
+  //   // console.log("HASH", hash);
+  //   // const signature = await signMessage(message, provider);
+  //   // console.log("SIGNATURE", signature);
+  //   if (!contract) {
+  //     throw new Error("Contract not found");
+  //   }
 
-    // const amountFeeSeller = ((valueEthBig * (await getFeeSeller() * 10 ** 18)) /
-    // // (100 * 10 ** 6)) / 1000; DECIMALES, 6 USDT
-    // (100 * 10 ** 18)) / 1000;
+  //   // const amountFeeSeller = ((valueEthBig * (await getFeeSeller() * 10 ** 18)) /
+  //   // // (100 * 10 ** 6)) / 1000; DECIMALES, 6 USDT
+  //   // (100 * 10 ** 18)) / 1000;
   
-    console.log("approveValue", approveValue);
-    const amountApprove = convertToBigNumber(parseFloat(approveValue), 6);
-    console.log("amountApprove ", amountApprove);
-    try {
-      // const addParticipantID = await contract.participant_id(); // Asegúrate de que este método existe y devuelve el último productId
-      // const addEscrowTokenTx = await contract.addParticipant(address, hash, signature, value, cost, USDTAddress) {
-      // const addEscrowTokenTx = await contract.addParticipant( value, cost, USDTAddress {
-      const approveTx = await tokenContract?.approve (CONTRACT_ADDRESS, amountApprove, {
-          gasLimit: 5000000,
-        });
-      await approveTx.wait();
-      // const receipt = await waitForTransaction(addEscrowTokenTx);
-      window.alert("Se ha aprobado con éxito")
-      toast("Se ha aprobado con éxito");
-      // await waitForTransaction(tx);
-      console.log("Hash del approve", approveTx.hash);
-      console.log('Transacción approve confirmada:', approveTx);
+  //   console.log("approveValue", approveValue);
+  //   const amountApprove = convertToBigNumber(parseFloat(approveValue), 6);
+  //   console.log("amountApprove ", amountApprove);
+  //   try {
+  //     // const addParticipantID = await contract.participant_id(); // Asegúrate de que este método existe y devuelve el último productId
+  //     // const addEscrowTokenTx = await contract.addParticipant(address, hash, signature, value, cost, USDTAddress) {
+  //     // const addEscrowTokenTx = await contract.addParticipant( value, cost, USDTAddress {
+  //     const approveTx = await tokenContract?.approve (CONTRACT_ADDRESS, amountApprove, {
+  //         gasLimit: 5000000,
+  //       });
+  //     await approveTx.wait();
+  //     // const receipt = await waitForTransaction(addEscrowTokenTx);
+  //     window.alert("Se ha aprobado con éxito")
+  //     toast("Se ha aprobado con éxito");
+  //     // await waitForTransaction(tx);
+  //     console.log("Hash del approve", approveTx.hash);
+  //     console.log('Transacción approve confirmada:', approveTx);
 
-    } catch (error) {
-      console.error(error);
-      // window.alert(error);
-      toast.error("No se ha podido aprobar");
-    }
-   setIsLoading(false);
-  } 
-  /// ================== Transfer Usdt Token  ==================
-  const transfer = async (event: { preventDefault: () => void; }) => {
-    event.preventDefault();
-    setIsLoading(true);
-    // const message = "Hola, Towerbank pagará el gas por ti";
-    // const hash = hashMessage(message);
-    // console.log("HASH", hash);
-    // const signature = await signMessage(message, provider);
-    // console.log("SIGNATURE", signature);
-    if (!contract) {
-      throw new Error("Contract not found");
-    }
+  //   } catch (error) {
+  //     console.error(error);
+  //     // window.alert(error);
+  //     toast.error("No se ha podido aprobar");
+  //   }
+  //  setIsLoading(false);
+  // } 
+  // /// ================== Transfer Usdt Token  ==================
+  // const transfer = async (event: { preventDefault: () => void; }) => {
+  //   event.preventDefault();
+  //   setIsLoading(true);
+  //   // const message = "Hola, Towerbank pagará el gas por ti";
+  //   // const hash = hashMessage(message);
+  //   // console.log("HASH", hash);
+  //   // const signature = await signMessage(message, provider);
+  //   // console.log("SIGNATURE", signature);
+  //   if (!contract) {
+  //     throw new Error("Contract not found");
+  //   }
 
-    // const amountFeeSeller = ((valueEthBig * (await getFeeSeller() * 10 ** 18)) /
-    // // (100 * 10 ** 6)) / 1000; DECIMALES, 6 USDT
-    // (100 * 10 ** 18)) / 1000;
+  //   // const amountFeeSeller = ((valueEthBig * (await getFeeSeller() * 10 ** 18)) /
+  //   // // (100 * 10 ** 6)) / 1000; DECIMALES, 6 USDT
+  //   // (100 * 10 ** 18)) / 1000;
   
-    console.log("transferValue", valueTransfer);
-    const amountValue = ethers.parseUnits(valueTransfer.toString(), 6);
-    console.log("amountApprove ", amountValue);
-    try {
-      // const addParticipantID = await contract.participant_id(); // Asegúrate de que este método existe y devuelve el último productId
-      // const addEscrowTokenTx = await contract.addParticipant(address, hash, signature, value, cost, USDTAddress) {
-      // const addEscrowTokenTx = await contract.addParticipant( value, cost, USDTAddress {
-      const transferTx = await tokenContract?.transfer(addressTransfer, amountValue, {
-          gasLimit: 5000000,
-        });
-      await transferTx.wait();
-      // const receipt = await waitForTransaction(addEscrowTokenTx);
-      window.alert("Se ha transferido con éxito")
-      toast("Se ha transferido con éxito");
-      // await waitForTransaction(tx);
-      console.log("Hash del transfer", transferTx.hash);
-      console.log('Transacción transfer confirmada:', transferTx);
+  //   console.log("transferValue", valueTransfer);
+  //   const amountValue = ethers.parseUnits(valueTransfer.toString(), 6);
+  //   console.log("amountApprove ", amountValue);
+  //   try {
+  //     // const addParticipantID = await contract.participant_id(); // Asegúrate de que este método existe y devuelve el último productId
+  //     // const addEscrowTokenTx = await contract.addParticipant(address, hash, signature, value, cost, USDTAddress) {
+  //     // const addEscrowTokenTx = await contract.addParticipant( value, cost, USDTAddress {
+  //     const transferTx = await tokenContract?.transfer(addressTransfer, amountValue, {
+  //         gasLimit: 5000000,
+  //       });
+  //     await transferTx.wait();
+  //     // const receipt = await waitForTransaction(addEscrowTokenTx);
+  //     window.alert("Se ha transferido con éxito")
+  //     toast("Se ha transferido con éxito");
+  //     // await waitForTransaction(tx);
+  //     console.log("Hash del transfer", transferTx.hash);
+  //     console.log('Transacción transfer confirmada:', transferTx);
 
-    } catch (error) {
-      console.error(error);
-      // window.alert(error);
-      toast.error("No se ha podido transferir");
-    }
-   setIsLoading(false);
-  } 
+  //   } catch (error) {
+  //     console.error(error);
+  //     // window.alert(error);
+  //     toast.error("No se ha podido transferir");
+  //   }
+  //  setIsLoading(false);
+  // } 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, type, value } = e.target;
@@ -1252,21 +1253,21 @@ const closeModal = () => {
               {ethBalance && <p className="show-balance">Balance de ETH: {ethBalance}</p>}
             </div>
             <div className="balances-container">
-             {allowance && <p>Allowance: {formatEther((allowance))}</p>}
-             <p>Allowance: {allowance? formatEther((allowance)) : '0'}</p>
+             {/* {allowance && <p>Allowance: {formatEther((allowance))}</p>}
+             <p>Allowance: {allowance? formatEther((allowance)) : '0'}</p> */}
              {/* <button className="publish-offer-button" onClick={approve}> PUBLICAR OFERTA </button> */}
-             <form className="approveValue" onSubmit={approve}>
+             {/* <form className="approveValue" onSubmit={approve}>
                       <input type="text" placeholder="Permitir enviar tokens"
                       value={approveValue} onChange={(e) => setApproveValue(e.target.value)} />
                       <button type="submit">Aprobar</button>
-                    </form> 
-             <form className="valueTransfer" onSubmit={transfer}>
+                    </form>  */}
+             {/* <form className="valueTransfer" onSubmit={transfer}>
                       <input type="number" placeholder="Cantidad a transferir" min={0}
                       value={valueTransfer} onChange={(e) => setValueTransfer(e.target.value)} />
                       <input type="text" placeholder="Direccion del user" 
                       value={addressTransfer} onChange={(e) => setAddressTransfer(e.target.value)} />
                       <button type="submit">Transferir</button>
-                    </form> 
+                    </form>  */}
             </div>
           </div>
           <div className='app-price-container'>
