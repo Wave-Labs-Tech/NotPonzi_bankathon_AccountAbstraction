@@ -266,3 +266,29 @@ AZUL 2: #1b3b6f medio
   font-size: 1.2rem;
   /* border: 1px solid #ffffff; */
 }
+.connect-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 10px;
+}
+.connect-container h1 {
+  font-size: 1.5rem;
+}
+
+.connect-container button {
+  background-color: #e2f212; /* Fondo de botón amarillo claro */
+  color: #0c2d59; /* Texto en azul oscuro */
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  display: block;
+  width: 50%;
+  margin-top: 20px;
+  text-transform: uppercase;
+  transition: background-color 0.3s ease;
+}

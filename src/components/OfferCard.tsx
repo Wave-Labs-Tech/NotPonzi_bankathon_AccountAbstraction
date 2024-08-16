@@ -35,14 +35,17 @@ interface OfferCardProps {
     
     const weiValue = BigInt(offer?.[2]?.toString() || "0"); // Valor en wei
     const _cost = BigInt(offer?.[3]?.toString() || "0"); // Coste en wei
-    
+    console.log("_cost", _cost);
+    console.log("isEthOffer", weiValue);
     // Determinar el tipo de oferta
     const isEthOffer = offer?.[6]; 
     
     // Convertir el valor de wei a la unidad correspondiente
     const valueInEth = parseFloat(ethers.formatEther(weiValue)); // Convertir wei a ETH y a número
     const valueInUsdt = Number(weiValue) / 1e12; // Convertir wei a USDT y a número
-
+    console.log("valueInEth", valueInEth);
+    console.log("valueInUsdt", valueInUsdt);
+    
     const valueToDisplay = isEthOffer 
         ? valueInEth.toFixed(18) // Convertir a ETH y limitar a 18 decimales
         : valueInUsdt.toFixed(6); // Convertir a USDT y limitar a 6 decimales

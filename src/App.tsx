@@ -14,7 +14,7 @@ import FormularioOferta from './components/FormularioOferta'
 import OfferCard from "./components/OfferCard";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import {uiConsole} from './utils/Utils';
+// import {uiConsole} from './utils/Utils';
 import truncateEthAddress from 'truncate-eth-address';
 
 // import { coinGeckoGetPricesKV, coinGeckoGetPricesList } from './utils/Prices'
@@ -22,10 +22,10 @@ import truncateEthAddress from 'truncate-eth-address';
 
 
 // import Web3 from "web3";
-import { Web3Auth } from "@web3auth/modal";
-import { EthereumPrivateKeyProvider } from "@web3auth/ethereum-provider";
+// import { Web3Auth } from "@web3auth/modal";
+// import { EthereumPrivateKeyProvider } from "@web3auth/ethereum-provider";
 // import { CHAIN_NAMESPACES, UserInfo, WEB3AUTH_NETWORK } from "@web3auth/base";
-import { CHAIN_NAMESPACES, WEB3AUTH_NETWORK } from "@web3auth/base";
+// import { CHAIN_NAMESPACES} from "@web3auth/base";
 // import { Contract, ethers, formatEther, hashMessage, JsonRpcProvider, Wallet } from 'ethers';
 import { Contract, ethers, formatEther} from 'ethers';
 
@@ -72,30 +72,30 @@ const clientId = process.env.REACT_APP_CLIENT_ID; // get from https://dashboard.
 //   tickerName: "AETH",
 //   logo: "https://images.toruswallet.io/eth.svg",
 // };
-const chainConfig = {
-  chainId: "0xaa36a7", // Chain ID para Sepolia (0xaa36a7 en hexadecimal)
-  rpcTarget: process.env.REACT_APP_SEPOLIA_RPC_URL || "", // Asegúrate de tener el RPC correcto para Sepolia
-  chainNamespace: CHAIN_NAMESPACES.EIP155, // Mantén el mismo valor, ya que es Ethereum
-  displayName: "Ethereum Sepolia", // Nombre que se mostrará para la red
-  blockExplorerUrl: "https://sepolia.etherscan.io/", // Explorador de bloques para Sepolia
-  ticker: "ETH", // Ticker de la moneda (ETH para Ethereum)
-  tickerName: "Ethereum", // Nombre completo de la moneda
-  logo: "https://images.toruswallet.io/eth.svg", // Mantén el logo de Ethereum
-};
+// const chainConfig = {
+//   chainId: "0xaa36a7", // Chain ID para Sepolia (0xaa36a7 en hexadecimal)
+//   rpcTarget: process.env.REACT_APP_SEPOLIA_RPC_URL || "", // Asegúrate de tener el RPC correcto para Sepolia
+//   chainNamespace: CHAIN_NAMESPACES.EIP155, // Mantén el mismo valor, ya que es Ethereum
+//   displayName: "Ethereum Sepolia", // Nombre que se mostrará para la red
+//   blockExplorerUrl: "https://sepolia.etherscan.io/", // Explorador de bloques para Sepolia
+//   ticker: "ETH", // Ticker de la moneda (ETH para Ethereum)
+//   tickerName: "Ethereum", // Nombre completo de la moneda
+//   logo: "https://images.toruswallet.io/eth.svg", // Mantén el logo de Ethereum
+// };
 
-const privateKeyProvider = new EthereumPrivateKeyProvider({
-  config: { chainConfig: chainConfig },
-});
+// const privateKeyProvider = new EthereumPrivateKeyProvider({
+//   config: { chainConfig: chainConfig },
+// });
 
 if (!clientId) {
   throw new Error('ClientId not found')
 }
 
-const web3auth = new Web3Auth({
-  clientId,
-  web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
-  privateKeyProvider: privateKeyProvider,
-});
+// const web3auth = new Web3Auth({
+//   clientId,
+//   web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+//   privateKeyProvider: privateKeyProvider,
+// });
 
 
 export default function Home() {
@@ -458,24 +458,24 @@ const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
 //DESCOMENTAR setProvider DESPUES DE RECUPERAR WEB3AUTH
 //DESCOMENTAR setProvider DESPUES DE RECUPERAR WEB3AUTH
 //DESCOMENTAR setProvider y web3authProvider DESPUES DE RECUPERAR WEB3AUTH
-const login = async () => {
+// const login = async () => {
   // IMP START - Login
   // const web3authProvider = await web3auth.connect();
   // IMP END - Login
   // setProvider(web3authProvider);
   
   
-    if (web3auth.connected) {
-      setLoggedIn(true);
-    }
-  };
+  //   if (web3auth.connected) {
+  //     setLoggedIn(true);
+  //   }
+  // };
 
-  const logout = async () => {
-    await web3auth.logout();
-    setProvider(null);
-    setLoggedIn(false);
-    uiConsole("logged out");
-  };
+  // const logout = async () => {
+  //   await web3auth.logout();
+  //   setProvider(null);
+  //   setLoggedIn(false);
+  //   uiConsole("logged out");
+  // };
   //DESCOMENTAR setProvider DESPUES DE RECUPERAR WEB3AUTH
   //DESCOMENTAR setProvider DESPUES DE RECUPERAR WEB3AUTH
   //DESCOMENTAR setProvider DESPUES DE RECUPERAR WEB3AUTH
@@ -613,27 +613,31 @@ console.log(`El valor de ${value} ETH en USDT (en Wei) es: ${totalInETH.toString
             
           // Convertir 'value' de Ether a wei
           const valueInWei = ethers.parseEther(value);
-
+          console.log("valueInWei NC ", valueInWei);
+          
           // Convertir 'price' de USDT a su unidad más pequeña (asumiendo 6 decimales para USDT)
           const pricePerEthInUSDT = ethers.parseUnits(price, 12);
-
+          console.log("pricePerEthInUSDT NC", pricePerEthInUSDT);
+          
           // Ahora calculamos el total en USDT que equivale a 'value' de Ether
           const totalInUSDT = valueInWei * pricePerEthInUSDT / ethers.parseEther("1");
-
+          console.log("totalInUSDT NC", totalInUSDT);
+          
           // Ahora calculamos el valor total en USDT pero expresado en wei
           const totalInUSDTWei = valueInWei * pricePerEthInUSDT / BigInt(1e18);
-
-          console.log(`El valor de ${value} ETH en USDT (en Wei) es: ${totalInUSDTWei.toString()}`)
+          console.log("totalInUSDTWei NC", totalInUSDTWei)
+          
+          console.log(`El valor de ${value} ETH en USDT NC (en Wei) es: ${totalInUSDTWei.toString()}`)
           // console.log("totalCostInWei", totalCostAsString);
-              // Intentar agregar el escrow nativo
-      
+          // Intentar agregar el escrow nativo
+          
           const addEscrowNativeTx = await contract.createEscrowNativeCoin(
-            totalInUSDT, // Asumiendo que 'valueInWei' es el valor correcto a pasar
+            valueInWei, // Asumiendo que 'valueInWei' es el valor correcto a pasar
             totalInUSDTWei, // Asumiendo que 'totalCostAsString' es el valor correcto a pasar
             USDTAddress, // Asegúrate de que 'USDTAddress' es válido
             {
               gasLimit: 5000000,
-              value: totalInUSDT // Asegúrate de que este es el valor correcto a pasar como parte de la transacción
+              value: valueInWei // Asegúrate de que este es el valor correcto a pasar como parte de la transacción
             }
           );
           await addEscrowNativeTx.wait();
@@ -1202,9 +1206,9 @@ const closeModal = () => {
       </div>
       </div>
     </div>
-      <button className="bg-[#ca0372] p-2 text-xl font-bold text-center w-1/5 m-auto mt-4 mb-4 border-2 border-stone-800 rounded-md hover:bg-[#ca0372] bg-opacity-50 transition-all disabled:opacity-80 text-xl font-semibold" onClick={login}>
+      {/* <button className="bg-[#ca0372] p-2 text-xl font-bold text-center w-1/5 m-auto mt-4 mb-4 border-2 border-stone-800 rounded-md hover:bg-[#ca0372] bg-opacity-50 transition-all disabled:opacity-80 text-xl font-semibold" onClick={login}>
         Login
-      </button>
+      </button> */}
     </div>
     );
   
@@ -1212,9 +1216,9 @@ const closeModal = () => {
       <>
 
   
-        <button className="bg-[#ca0372] p-2 text-xl font-bold text-center w-1/5 m-auto mt-4 mb-4 border-2 border-stone-800 rounded-md hover:bg-[#ca0372] hover:opacity-50  transition-all disabled:opacity-80 text-xl font-semibold " onClick={logout}>
+        {/* <button className="bg-[#ca0372] p-2 text-xl font-bold text-center w-1/5 m-auto mt-4 mb-4 border-2 border-stone-800 rounded-md hover:bg-[#ca0372] hover:opacity-50  transition-all disabled:opacity-80 text-xl font-semibold " onClick={logout}>
           Log Out
-        </button>
+        </button> */}
         {/* </div> */}
         {/* </div> */}
       </>
@@ -1458,14 +1462,14 @@ const closeModal = () => {
         // <div  className='p-96 flex-col rounded-md m-auto place-content-center bg-[#292d67]' >
 
         // </div>
-      <div>
+      <div className="connect-container">
         <h1>CONECTATE A LA APLICACION</h1>
         {/* {version && <p className={styles.description}>`version: ${version}`</p>} */}
         {/* {<p className={styles.description}>Allowance{allowance?.toString()}</p>} */}
         {address ? (
           <p>Connected Address: {address}</p>
         ) : (
-          <button onClick={connectWallet}>Connect Wallet</button>
+          <button onClick={connectWallet}>Connectar Billetera</button>
         )}
       </div>
       )}

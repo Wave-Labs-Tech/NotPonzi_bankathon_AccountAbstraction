@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 // import styles from '../styles/FormularioAnuncio.module.css';
 import '../styles/FormularioOferta.css';
 
@@ -25,10 +25,27 @@ type FormularioOfertaProps = {
 };
 // function ModalResumen({ onCloseModal, cripto, value, price, payment_mode }){
   const FormularioOferta: React.FC<FormularioOfertaProps> = ({ handleSubmitModal, datosModal, handleChange, onCloseForm, ethBalance, balanceOf, prices }) => {
-    const usdtPrecio = prices['usdt']?.precio;
-    const ethPrecio = prices['eth']?.precio;
-    const valorEthEnUsd = ethPrecio * usdtPrecio;
-    const valorUsdEnEth = usdtPrecio / ethPrecio;
+    // const usdtPrecio = prices['usdt']?.precio;
+    // const ethPrecio = prices['eth']?.precio;
+    const usdtPrecio = 1;
+    const ethPrecio = 3333;
+    const [usdtValue, setUsdtValue] = useState('');
+    const [ethValue, setEthValue] = useState('');
+  
+    const handleInputChange = (event: { target: { name: any; value: any; }; }) => {
+      const { name, value } = event.target;
+      if (name === 'usdt') {
+        setUsdtValue(value);
+        // Convertir USDT a ETH: Divide la cantidad de USDT por el precio de ETH en dólares
+        const convertedEthValue = (parseFloat(value) / ethPrecio).toFixed(18); // Ajusta los decimales según sea necesario para ETH
+        setEthValue(convertedEthValue);
+      } else if (name === 'eth') {
+        setEthValue(value);
+        // Convertir ETH a USDT: Multiplica la cantidad de ETH por el precio de ETH en dólares
+        const convertedUsdtValue = (parseFloat(value) * ethPrecio).toFixed(2); // Ajusta los decimales según sea necesario para USDT
+        setUsdtValue(convertedUsdtValue);
+      }
+    };
     
   console.log("Datos modal formulario", datosModal);
   const handleClose = () => {
@@ -45,12 +62,22 @@ type FormularioOfertaProps = {
             {prices && <p>USDT - DOLLAR:  {usdtPrecio} </p>}
           </div>
             <div className='form-prices'>
-            {prices && <p>ETH - USDT: {valorEthEnUsd} </p>}
-            {prices && <p>USDT - ETH: {valorUsdEnEth} </p>}
+            {prices && <p>ETH - USDT: {usdtPrecio / ethPrecio} </p>}
+            {prices && <p>USDT - ETH: {ethPrecio / usdtPrecio} </p>}
             </div>
             <div>
             <button className="form-close-button" onClick={handleClose}>x</button>
           </div>
+        </div>
+        <div>
+        <div className='converter-container'>
+          <label htmlFor="usdt">USDT:</label>
+          <input type="number" id="usdt" name="usdt" value={usdtValue} onChange={handleInputChange} />
+          {/* <p>ETH: {ethValue}</p> */}
+          <label htmlFor="eth">ETH:</label>
+          <input type="number" id="eth" name="eth" value={ethValue} onChange={handleInputChange} />
+          {/* <p>USDT: {usdtValue}</p> */}
+        </div>
         </div>
         <div>
           <label htmlFor="usdt">
@@ -63,12 +90,12 @@ type FormularioOfertaProps = {
           </label>
         </div>
         <div className="inputs-container">
-          <label htmlFor="value">Cantidad - Usar 18 decimales para ETH y 6 para USDT</label>
-          <input type="text" id="value" name="value" placeholder="Cantidad. Por ejemplo 2.45" value={datosModal.value}
+          <label htmlFor="value">Cantidad - Usar hasta 18 decimales para ETH y 6 para USDT</label>
+          <input type="text" id="value" name="value" placeholder="Ejemplo 12.555577 USDT o 0.000000000000000111 ETH" value={datosModal.value}
             onChange={handleChange}></input>
             <p>Disponible: {datosModal.crypto === "usdt"? balanceOf.toString() : ethBalance}</p>
-          <label htmlFor="price">Precio por unidad</label>
-          <input type="text" id="price" name="price" placeholder="Ejemplo 4500000 USDT o 10000000000000000 ETH" value={datosModal.price}
+          <label htmlFor="price">Precio/unidad - Usar hasta 18 decimales para ETH y 6 para USDT</label>
+          <input type="text" id="price" name="price" placeholder="Ejemplo 4500000 USDT o 1000000000000000000 ETH" value={datosModal.price}
             onChange={handleChange}></input>
           {/*         <label htmlFor="payment_mode">Modo de pago</label><br></br> */}
           {/* <div className={styles.container}>
