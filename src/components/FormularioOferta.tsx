@@ -25,25 +25,47 @@ type FormularioOfertaProps = {
 };
 // function ModalResumen({ onCloseModal, cripto, value, price, payment_mode }){
   const FormularioOferta: React.FC<FormularioOfertaProps> = ({ handleSubmitModal, datosModal, handleChange, onCloseForm, ethBalance, balanceOf, prices }) => {
-    // const usdtPrecio = prices['usdt']?.precio;
-    // const ethPrecio = prices['eth']?.precio;
-    const usdtPrecio = 1;
-    const ethPrecio = 3333;
-    const [usdtValue, setUsdtValue] = useState('');
-    const [ethValue, setEthValue] = useState('');
+    const usdtPrecio = prices['usdt']?.precio;
+    const ethPrecio = prices['eth']?.precio;
+    // const usdtPrecio = 1;
+    // const ethPrecio = 3333;
+
+    // Valores iniciales para usdtValue y ethValue
+    const initialUsdtValue = '';
+    const initialEthValue = '';
+
+    const [usdtValue, setUsdtValue] = useState(initialUsdtValue);
+    const [ethValue, setEthValue] = useState(initialEthValue);
   
     const handleInputChange = (event: { target: { name: any; value: any; }; }) => {
       const { name, value } = event.target;
+
+      // Reemplazar comas por puntos
+      let newValue = value.replace(',', '.');
+
+      // Verificar si el nuevo valor es una cadena vacía o contiene caracteres no numéricos
+      if (!newValue || isNaN(parseFloat(newValue))) {
+        // Limpiar el valor del campo correspondiente
+        if (name === 'usdt') {
+          setUsdtValue(initialUsdtValue);
+          setEthValue(usdtValue); // Mantiene el valor de ETH igual
+        } else if (name === 'eth') {
+          setEthValue(initialEthValue);
+          setUsdtValue(ethValue); // Mantiene el valor de USDT igual
+        }
+        return; // Salir de la función temprano
+      }
+
       if (name === 'usdt') {
-        setUsdtValue(value);
+        setUsdtValue(newValue);
         // Convertir USDT a ETH: Divide la cantidad de USDT por el precio de ETH en dólares
-        const convertedEthValue = (parseFloat(value) / ethPrecio).toFixed(18); // Ajusta los decimales según sea necesario para ETH
-        setEthValue(convertedEthValue);
+        const convertedEthValue = (parseFloat(newValue) / ethPrecio); // Ajusta los decimales según sea necesario para ETH
+        setEthValue(convertedEthValue.toFixed(18));
       } else if (name === 'eth') {
-        setEthValue(value);
+        setEthValue(newValue);
         // Convertir ETH a USDT: Multiplica la cantidad de ETH por el precio de ETH en dólares
-        const convertedUsdtValue = (parseFloat(value) * ethPrecio).toFixed(2); // Ajusta los decimales según sea necesario para USDT
-        setUsdtValue(convertedUsdtValue);
+        const convertedUsdtValue = (parseFloat(newValue) * ethPrecio); // Ajusta los decimales según sea necesario para USDT
+        setUsdtValue(convertedUsdtValue.toFixed(6));
       }
     };
     
@@ -58,12 +80,12 @@ type FormularioOfertaProps = {
         {/* <div className={styles.container}> */}
         <div className='form-price-container'>
           <div className='form-prices'>
-            {prices && <p>ETH - DOLLAR:  {ethPrecio} </p>}
-            {prices && <p>USDT - DOLLAR:  {usdtPrecio} </p>}
+            {prices && <p>1 ETH:  {ethPrecio} dolares </p>}
+            {prices && <p>1 USDT:  {usdtPrecio} dolares</p>}
           </div>
             <div className='form-prices'>
-            {prices && <p>ETH - USDT: {usdtPrecio / ethPrecio} </p>}
-            {prices && <p>USDT - ETH: {ethPrecio / usdtPrecio} </p>}
+            {prices && <p>1 ETH: {(ethPrecio / usdtPrecio).toFixed(6)} usdt</p>}
+            {prices && <p>1 USDT:  {(usdtPrecio / ethPrecio).toFixed(18)} eth </p>}
             </div>
             <div>
             <button className="form-close-button" onClick={handleClose}>x</button>
@@ -72,10 +94,10 @@ type FormularioOfertaProps = {
         <div>
         <div className='converter-container'>
           <label htmlFor="usdt">USDT:</label>
-          <input type="number" id="usdt" name="usdt" value={usdtValue} onChange={handleInputChange} />
+          <input type="text" pattern="\d*(\.\d{0,18})?"  id="usdt" name="usdt" value={usdtValue} onChange={handleInputChange} />
           {/* <p>ETH: {ethValue}</p> */}
           <label htmlFor="eth">ETH:</label>
-          <input type="number" id="eth" name="eth" value={ethValue} onChange={handleInputChange} />
+          <input type="text" pattern="\d*(\.\d{0,18})?"  id="eth" name="eth" value={ethValue} onChange={handleInputChange} />
           {/* <p>USDT: {usdtValue}</p> */}
         </div>
         </div>

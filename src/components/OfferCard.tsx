@@ -17,7 +17,7 @@ interface OfferCardProps {
       const [isCanceling, setIsCanceling] = useState(false);
       // console.log("OFFER EN CARD", offer);
       // console.log("Id EN CARD", offer.id);
-     console.log("Offer COST y Type in Offercard", offer?.[3], offer?.[6]);
+    //  console.log("Offer COST y Type in Offercard", offer?.[3], offer?.[6]);
     const handleAccept = () => {
       if (offer[6]) {//comprobar si es escrowNative
         acceptEscrowNativeCoin(offer.id, offer?.[3]);
@@ -36,7 +36,7 @@ interface OfferCardProps {
     const weiValue = BigInt(offer?.[2]?.toString() || "0"); // Valor en wei
     const _cost = BigInt(offer?.[3]?.toString() || "0"); // Coste en wei
     console.log("_cost", _cost);
-    console.log("isEthOffer", weiValue);
+    console.log("weiValuer", weiValue);
     // Determinar el tipo de oferta
     const isEthOffer = offer?.[6]; 
     
