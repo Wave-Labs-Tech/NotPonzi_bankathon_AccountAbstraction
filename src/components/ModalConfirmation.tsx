@@ -5,7 +5,6 @@ import '../styles/ModalConfirmation.css'; // Asegúrate de crear este archivo CS
 import truncateEthAddress from 'truncate-eth-address';
 
 
-
 interface ConfirmationModalProps {
   show: boolean;
   onClose: () => void;
@@ -13,10 +12,20 @@ interface ConfirmationModalProps {
   offer: any;
 }
 
+/**
+ * Renders a confirmation modal with details of an offer and actions to confirm or cancel.
+ *
+ * @param {boolean} show - Whether the modal should be displayed.
+ * @param {() => void} props.onClose - Callback function to close the modal.
+ * @param {() => void} props.onConfirm  - Callback function to confirm the offer.
+ * @param {any} props.offer - Details of the offer to be displayed.
+ * @return {JSX.Element|null} The modal component or null if it should not be displayed.
+ */
+
+// CancelationModal muestra una confirmación antes de cancelar una oferta.
+// Permite al usuario revisar los detalles de la oferta antes de confirmar la cancelación.
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ show, onClose, onConfirm, offer }) => {
     if (!show) return null; // No renderiza nada si el modal no debe mostrarse
-    // console.log("OFFER EN MODAL", offer);
-    // console.log("Id EN MODAL", offer.id);
     return (
       <div className="modal-overlay-confirmation">
         <div className="modal-content-confirmation">

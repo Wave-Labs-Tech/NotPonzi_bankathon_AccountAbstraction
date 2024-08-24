@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ethers } from 'ethers'; // Asegúrate de importar BigNumber si lo usas
-import ConfirmationModal from './ModalConfirmation'; // Importa el modal
-import CancelationModal from './ModalCancelation'; // Importa el modal
+import { ethers } from 'ethers'; 
+import ConfirmationModal from './ModalConfirmation'; 
+import CancelationModal from './ModalCancelation'; 
 import '../styles/OfferCard.css';
 
 
@@ -15,36 +15,33 @@ interface OfferCardProps {
   const OfferCard: React.FC<OfferCardProps> = ({ offer, acceptEscrowToken, acceptEscrowNativeCoin, cancelEscrow, address }) => {
       const [showModal, setShowModal] = useState(false);
       const [isCanceling, setIsCanceling] = useState(false);
-      // console.log("OFFER EN CARD", offer);
-      // console.log("Id EN CARD", offer.id);
-    //  console.log("Offer COST y Type in Offercard", offer?.[3], offer?.[6]);
     const handleAccept = () => {
       if (offer[6]) {//comprobar si es escrowNative
-        acceptEscrowNativeCoin(offer.id, offer?.[3]);
+        acceptEscrowNativeCoin(offer.id, offer?.[3]);//Aceptar escrow ETH
       } else {
-        acceptEscrowToken(offer?.id, offer?.[3]);
+        acceptEscrowToken(offer?.id, offer?.[3]);//Aceptar escrow USDT
       }
       setShowModal(false);
     };
     const handleCancel = () => {
       if (offer[1] === address) {//comprobar si es escrowNative
-        cancelEscrow(offer.id, offer[2]);
+        cancelEscrow(offer.id, offer[2]);//Cancelar un escrow
       } 
-      setShowModal(false);
+      setShowModal(false);//Ocultar el modal
     };
     
     const weiValue = BigInt(offer?.[2]?.toString() || "0"); // Valor en wei
     const _cost = BigInt(offer?.[3]?.toString() || "0"); // Coste en wei
-    console.log("_cost", _cost);
-    console.log("weiValuer", weiValue);
+    // console.log("Cost", _cost);
+    // console.log("WeiValue", weiValue);
     // Determinar el tipo de oferta
     const isEthOffer = offer?.[6]; 
     
     // Convertir el valor de wei a la unidad correspondiente
     const valueInEth = parseFloat(ethers.formatEther(weiValue)); // Convertir wei a ETH y a número
     const valueInUsdt = Number(weiValue) / 1e12; // Convertir wei a USDT y a número
-    console.log("valueInEth", valueInEth);
-    console.log("valueInUsdt", valueInUsdt);
+    // console.log("Value in Eth", valueInEth);
+    // console.log("Value in Usdt", valueInUsdt);
     
     const valueToDisplay = isEthOffer 
         ? valueInEth.toFixed(18) // Convertir a ETH y limitar a 18 decimales
@@ -60,17 +57,10 @@ interface OfferCardProps {
 
   // Determinar si el usuario es el creador de la oferta
   const isCreator = offer[1] === address;
-  // console.log("offer[1] === address?", offer[1] === address)
-  // console.log("offer", offer[6]);
-  // console.log("address", address);
   
   return (
-    // <div className='offerCard-container'>
     <div className='offerCard'>
       <h3>Oferta {offer?.id}</h3>
-      {/* <p>Estado: {status}</p> */}
-      {/* <p>Valor: {offer?.[2].toString()}</p> */}
-      {/* <p>Coste: {offer?.[3].toString()}</p> */}
       <p>Valor: {valueToDisplay} {isEthOffer ? 'ETH' : 'USDT'}</p>
       <p>Coste: {costToDisplay} {!isEthOffer ? 'ETH' : 'USDT'}</p>
       <p>Tipo: {offer?.[5]? 'ETH': 'UDST'}</p>

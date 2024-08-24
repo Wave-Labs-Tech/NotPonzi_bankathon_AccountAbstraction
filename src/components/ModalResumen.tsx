@@ -1,4 +1,4 @@
-import '../styles/ModalResumen.css'; // Asegúrate de importar el archivo CSS
+import '../styles/ModalResumen.css'; 
 
 type ModalResumenProps = {
   onCloseModal: () => void;
@@ -6,9 +6,8 @@ type ModalResumenProps = {
   onConfirm: () => void;
 };
 
-  // Define el tipo para datosModa
+  // Define los tipos para datosModal
   type DatosModal = {
-    // crypto: "usdt" | "eth"; // Cambia esto si hay más opciones
     crypto: string; 
     value: string;
     price: string;
@@ -17,10 +16,18 @@ type ModalResumenProps = {
     conditions: string;
   };
 
-// function ModalResumen({ onCloseModal, cripto, amount, price, payment_mode }){
-  const ModalResumen: React.FC<ModalResumenProps> = ({ onCloseModal, datosModal, onConfirm }) => {
+  /**
+   *  Renders a modal window with a summary of the transaction data.
+   * 
+   *  @param {ModalResumenProps} props - The properties for the modal window.
+   *  @param {function} props.onCloseModal - A callback function to close the modal window.
+   *  @param {DatosModal} props.datosModal - An object containing the transaction data.
+   *  @param {function} props.onConfirm - A callback function to confirm the transaction.
+   * 
+   *  @return {JSX.Element} The JSX element representing the modal window.
+   */
+  const ModalResumen: React.FC<ModalResumenProps> = ({ onCloseModal, datosModal, onConfirm }: ModalResumenProps): JSX.Element => {
   const isValidCrypto = datosModal.crypto === "usdt" || datosModal.crypto === "eth";
-  // console.log("Estos son los datos del modal", datosModal);
   return (
     <div className="modal-overlay">
       <div className="modal-content">
